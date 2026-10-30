@@ -13,6 +13,7 @@ import {
   dayTag,
   formatNumber,
 } from "../lib/format";
+import { BrightnessIndicator } from "./BrightnessIndicator";
 
 interface RightPanelProps {
   locationName: string | null;
@@ -183,8 +184,16 @@ export const RightPanel: React.FC<RightPanelProps> = ({
               </span>
               <span>
                 <small>BRIGHTNESS</small>
-                <strong className="mono" id="nextBrightness">
-                  {activeNext ? magnitudeLabel(activeNext.magnitude) : "—"}
+                <strong className="mono next-brightness-val" id="nextBrightness">
+                  {activeNext ? (
+                    <>
+                      <BrightnessIndicator magnitude={activeNext.magnitude} />
+                      <span>{magnitudeLabel(activeNext.magnitude)}</span>
+                      <span className="next-brightness-tier">({brightnessLabel(activeNext.magnitude)})</span>
+                    </>
+                  ) : (
+                    "—"
+                  )}
                 </strong>
               </span>
             </span>
@@ -289,7 +298,10 @@ export const RightPanel: React.FC<RightPanelProps> = ({
                           )}`}
                         </small>
                       </span>
-                      <span className="pass-mag">{magnitudeLabel(pass.magnitude)}</span>
+                      <span className="pass-mag" title={`${brightnessLabel(pass.magnitude)} (${magnitudeLabel(pass.magnitude)})`}>
+                        <BrightnessIndicator magnitude={pass.magnitude} />
+                        <span>{magnitudeLabel(pass.magnitude)}</span>
+                      </span>
                     </button>
                     <button
                       className="pass-save"

@@ -1,7 +1,16 @@
 import React from "react";
 import { Satellite, SatellitePass, DisplayOptions, UserSettings } from "../types/orbital";
 import { GROUPS, GROUP_BY_ID } from "../lib/catalog";
-import { formatNumber, formatAltitude, formatSpeed, formatTime, dayTag } from "../lib/format";
+import {
+  formatNumber,
+  formatAltitude,
+  formatSpeed,
+  formatTime,
+  dayTag,
+  brightnessLabel,
+  magnitudeLabel,
+} from "../lib/format";
+import { BrightnessIndicator } from "./BrightnessIndicator";
 
 interface TelemetryData {
   altitude: number | null;
@@ -292,7 +301,18 @@ export const LeftDock: React.FC<LeftDockProps> = ({
                 </span>
               )}
             </span>
-            <strong id="satNextPass">{nextPassText()}</strong>
+            <div className="sat-pass-detail">
+              <strong id="satNextPass">{nextPassText()}</strong>
+              {selectedPass && (
+                <span
+                  className="sat-pass-brightness"
+                  title={`${brightnessLabel(selectedPass.magnitude)} (${magnitudeLabel(selectedPass.magnitude)})`}
+                >
+                  <BrightnessIndicator magnitude={selectedPass.magnitude} showLabel />
+                  <span className="mono mag-sub">({magnitudeLabel(selectedPass.magnitude)})</span>
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="sat-actions">

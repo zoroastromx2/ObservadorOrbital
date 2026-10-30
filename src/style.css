@@ -781,6 +781,28 @@ kbd {
   text-align: right;
 }
 
+.sat-pass-detail {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  text-align: right;
+}
+
+.sat-pass-brightness {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-soft);
+  font-size: 8.5px;
+  line-height: 1.1;
+}
+
+.sat-pass-brightness .mag-sub {
+  color: var(--faint);
+  font-size: 8px;
+}
+
 .sat-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1218,11 +1240,83 @@ kbd {
 }
 
 .pass-mag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   color: var(--muted);
   font-family: var(--font-mono);
   font-size: 8.5px;
   white-space: nowrap;
 }
+
+.brightness-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  vertical-align: middle;
+}
+
+.brightness-icon {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.brightness-icon.very-bright {
+  color: #f6c453;
+  filter: drop-shadow(0 0 3px rgba(246, 196, 83, 0.75));
+}
+
+.brightness-icon.bright {
+  color: #fed876;
+  filter: drop-shadow(0 0 2px rgba(254, 216, 118, 0.5));
+}
+
+.brightness-icon.visible {
+  color: #9ec1eb;
+}
+
+.brightness-icon.faint {
+  color: #65748a;
+  opacity: 0.8;
+}
+
+.brightness-label-text {
+  font-size: 8.5px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.tier-very-bright .brightness-label-text {
+  color: #f6c453;
+}
+
+.tier-bright .brightness-label-text {
+  color: #fed876;
+}
+
+.tier-visible .brightness-label-text {
+  color: #9ec1eb;
+}
+
+.tier-faint .brightness-label-text {
+  color: #8391a3;
+}
+
+.next-brightness-val {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.next-brightness-tier {
+  color: var(--faint);
+  font-size: 8.5px;
+  font-weight: normal;
+}
+
 
 .pass-save {
   width: 30px;

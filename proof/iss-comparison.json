@@ -1,0 +1,21 @@
+{
+  "source": "wheretheiss.at public ISS API",
+  "sourceUrl": "https://api.wheretheiss.at/v1/satellites/25544",
+  "comparedAtUtc": "2026-10-30T21:08:21.000Z",
+  "tleEpochUtc": "2026-10-30T11:12:14.281344Z",
+  "ours": {
+    "latitude": 22.9937,
+    "longitude": 152.8136,
+    "altitudeKm": 424.7
+  },
+  "independent": {
+    "latitude": 23.006486988897,
+    "longitude": 152.79912093091,
+    "altitudeKm": 424.68917194521
+  },
+  "difference": {
+    "positionKm": 2.19,
+    "groundTrackKm": 2.05,
+    "altitudeKm": 0.01
+  }
+}

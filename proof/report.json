@@ -1,0 +1,34 @@
+{
+  "capturedAtUtc": "2026-10-30T21:23:01.375Z",
+  "url": "http://127.0.0.1:4783",
+  "browser": "Google Chrome (hardware WebGL)",
+  "desktop": {
+    "satelliteCount": 16847,
+    "drawnCount": 16847,
+    "fps": 60,
+    "passesFound": 5503,
+    "selected": "ISS (ZARYA)",
+    "location": "New York",
+    "consoleErrors": [],
+    "skyOpen": true
+  },
+  "mobile": {
+    "satelliteCount": 16847,
+    "drawnCount": 16847,
+    "fps": 60,
+    "passesFound": 5503,
+    "selected": "ISS (ZARYA)",
+    "location": "New York",
+    "consoleErrors": [],
+    "skyOpen": true
+  },
+  "consoleErrors": [],
+  "screenshots": [
+    "proof/desktop-selected.png",
+    "proof/desktop-sky.png",
+    "proof/phone-selected.png",
+    "proof/phone-tonight.png",
+    "proof/phone-sky.png"
+  ],
+  "passed": true
+}

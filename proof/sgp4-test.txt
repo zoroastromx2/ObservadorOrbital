@@ -1,0 +1,16 @@
+
+> orbital-watch@1.0.0 test
+> node --test tests/*.test.js
+
+SGP4 verification: 640 vectors across 31 cases, maximum error 3.321e-8 km (20413, t=110644200s)
+✔ all Vallado 2006 verification vectors are within 1 km (12.099ms)
+✔ the pathological 33334 case is identified as invalid (0.0997ms)
+✔ Greenwich sidereal time matches the published Julian-date example (0.9152ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 82.8911

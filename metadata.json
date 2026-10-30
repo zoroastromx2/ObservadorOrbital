@@ -1,0 +1,6 @@
+{
+  "name": "Orbital Watch",
+  "description": "A live, local-first 3D satellite tracker with visible pass prediction, orbital mechanics, and interactive sky dome.",
+  "permissions": [],
+  "capabilities": []
+}

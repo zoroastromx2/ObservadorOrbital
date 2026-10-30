@@ -143,29 +143,29 @@ export const SkyViewModal: React.FC<SkyViewModalProps> = ({
     { label: "N", angle: 0, className: "north" },
     { label: "E", angle: 90 },
     { label: "S", angle: 180 },
-    { label: "W", angle: 270 },
+    { label: "O", angle: 270 },
     { label: "NE", angle: 45 },
     { label: "SE", angle: 135 },
-    { label: "SW", angle: 225 },
-    { label: "NW", angle: 315 },
+    { label: "SO", angle: 225 },
+    { label: "NO", angle: 315 },
   ];
 
   return (
     <div id="skyView" className="sky-view" role="dialog" aria-modal="true" aria-labelledby="skyTitle">
       <div className="sky-shell">
         <header className="sky-header">
-          <button id="closeSkyView" className="button secondary" type="button" aria-label="Back to globe" onClick={onClose}>
+          <button id="closeSkyView" className="button secondary" type="button" aria-label="Volver al globo" onClick={onClose}>
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="m14 6-6 6 6 6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            <span>Back to globe</span>
+            <span>Volver al globo</span>
           </button>
 
           <div className="sky-header-center">
-            <span className="eyebrow">SKY VIEW</span>
+            <span className="eyebrow">VISTA DEL CIELO</span>
             <h2 id="skyTitle">{satellite?.name || pass.name}</h2>
             <span id="skyLocation" className="sky-location">
-              {locationName || "Your sky"}
+              {locationName || "Tu cielo"}
             </span>
           </div>
 
@@ -173,7 +173,7 @@ export const SkyViewModal: React.FC<SkyViewModalProps> = ({
             id="skySave"
             className="button secondary"
             type="button"
-            aria-label="Save this pass to calendar as an .ics file"
+            aria-label="Guardar este paso en el calendario como archivo .ics"
             onClick={onSaveCalendar}
           >
             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -187,7 +187,7 @@ export const SkyViewModal: React.FC<SkyViewModalProps> = ({
         <div className="sky-content">
           <div className="sky-chart-wrap">
             <div className="sky-chart-frame">
-              <svg id="skyChart" viewBox="0 0 720 720" role="img" aria-label="Sky chart showing the satellite pass path">
+              <svg id="skyChart" viewBox="0 0 720 720" role="img" aria-label="Carta celeste que muestra la trayectoria del paso del satélite">
                 <defs>
                   <radialGradient id="skyGlow" cx="50%" cy="50%" r="50%">
                     <stop offset="0%" stopColor="#10243b" stopOpacity="0.8" />
@@ -294,7 +294,7 @@ export const SkyViewModal: React.FC<SkyViewModalProps> = ({
 
             <div className="sky-chart-caption">
               <span>
-                <span className="legend-line"></span> Pass path
+                <span className="legend-line"></span> Trayectoria
               </span>
               <span className="mono" id="skyAzimuthReadout">
                 {currentPoint
@@ -307,7 +307,7 @@ export const SkyViewModal: React.FC<SkyViewModalProps> = ({
           <aside className="sky-side">
             <div className="sky-preview-state">
               <span className="eyebrow" id="skyStateLabel">
-                PASS PREVIEW
+                VISTA PREVIA DEL PASO
               </span>
               <strong id="skyClock" className="mono">
                 {currentPoint ? formatClock(new Date(currentPoint.timeMs), use24h) : "--:--:--"}
@@ -316,31 +316,31 @@ export const SkyViewModal: React.FC<SkyViewModalProps> = ({
 
             <dl className="sky-details">
               <div>
-                <dt>Start</dt>
+                <dt>Inicio</dt>
                 <dd id="skyStart">{`${dayTag(new Date(pass.startMs))} ${formatTime(new Date(pass.startMs), use24h)}`}</dd>
               </div>
               <div>
-                <dt>Peak</dt>
+                <dt>Cúspide</dt>
                 <dd id="skyPeak">{formatTime(new Date(pass.peakMs), use24h)}</dd>
               </div>
               <div>
-                <dt>Peak elevation</dt>
+                <dt>Elevación máx.</dt>
                 <dd id="skyElevation" className="mono">
                   {Math.round(pass.peakElevation)}°
                 </dd>
               </div>
               <div>
-                <dt>Direction</dt>
+                <dt>Dirección</dt>
                 <dd id="skyDirection">{azimuthLabel(pass.peakAzimuth)}</dd>
               </div>
               <div>
-                <dt>Brightness</dt>
+                <dt>Brillo</dt>
                 <dd id="skyBrightness">{`${brightnessLabel(pass.magnitude)} · ${pass.magnitude > 0 ? "+" : "−"}${Math.abs(
                   pass.magnitude
                 ).toFixed(1)}`}</dd>
               </div>
               <div>
-                <dt>Duration</dt>
+                <dt>Duración</dt>
                 <dd id="skyDuration" className="mono">
                   {formatDuration(pass.durationSec)}
                 </dd>
@@ -350,15 +350,15 @@ export const SkyViewModal: React.FC<SkyViewModalProps> = ({
             <div className="sky-compass-note">
               <span className="compass-glyph">N</span>
               <div>
-                <span className="eyebrow">TOP-DOWN VIEW</span>
-                <p>Compass aligned. Rings show 30°, 60°, and 90° elevation.</p>
+                <span className="eyebrow">VISTA CENITAL</span>
+                <p>Alineado con brújula. Los anillos indican 30°, 60° y 90° de elevación.</p>
               </div>
             </div>
 
             <button id="skyPreviewToggle" className="button primary" type="button" onClick={togglePreview}>
-              <span id="skyPreviewToggleText">{isPlaying ? "Pause preview" : "Play preview"}</span>
+              <span id="skyPreviewToggleText">{isPlaying ? "Pausar vista previa" : "Reproducir vista previa"}</span>
             </button>
-            <p className="sky-disclaimer">Preview speed is illustrative. Times shown are at your location.</p>
+            <p className="sky-disclaimer">La velocidad de la simulación es ilustrativa. Horas basadas en tu ubicación local.</p>
           </aside>
         </div>
       </div>

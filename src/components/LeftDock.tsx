@@ -66,10 +66,10 @@ export const LeftDock: React.FC<LeftDockProps> = ({
   const use24h = settings.clock === "24";
 
   const DISPLAY_TOGGLES: Array<{ id: "orbits" | "trails" | "labels" | "cityLights"; label: string }> = [
-    { id: "orbits", label: "Orbits" },
-    { id: "trails", label: "Trails" },
-    { id: "labels", label: "Labels" },
-    { id: "cityLights", label: "City lights" },
+    { id: "orbits", label: "Órbitas" },
+    { id: "trails", label: "Estelas" },
+    { id: "labels", label: "Etiquetas" },
+    { id: "cityLights", label: "Luces urbanas" },
   ];
 
   const formatLat = (val: number | null) => {
@@ -79,17 +79,20 @@ export const LeftDock: React.FC<LeftDockProps> = ({
 
   const formatLon = (val: number | null) => {
     if (val === null || !Number.isFinite(val)) return "—";
-    return `${Math.abs(val).toFixed(2)}° ${val >= 0 ? "E" : "W"}`;
+    return `${Math.abs(val).toFixed(2)}° ${val >= 0 ? "E" : "O"}`;
   };
 
   const nextPassText = () => {
     if (!selectedSatellite) return "—";
-    if (!locationName) return "Set a location";
+    if (!locationName) return "Configura una ubicación";
     if (selectedPass) {
       const date = new Date(selectedPass.startMs);
       return `${dayTag(date)} ${formatTime(date, use24h)} · ${Math.round(selectedPass.peakElevation)}°`;
     }
-    return selectedPassStatus || "Scanning…";
+    if (selectedPassStatus === "Scanning…") return "Escaneando…";
+    if (selectedPassStatus === "None in the next 7 days") return "Ninguno en los próximos 7 días";
+    if (selectedPassStatus === "Pass search unavailable") return "Búsqueda no disponible";
+    return selectedPassStatus || "Escaneando…";
   };
 
   return (
@@ -97,14 +100,14 @@ export const LeftDock: React.FC<LeftDockProps> = ({
       <section id="layersPanel" className={`panel glass ${collapsed ? "is-collapsed" : ""}`}>
         <div className="panel-header">
           <div>
-            <span className="eyebrow">DISPLAY</span>
-            <h2>Layers</h2>
+            <span className="eyebrow">VISUALIZACIÓN</span>
+            <h2>Capas</h2>
           </div>
           <button
             id="layersCollapse"
             className="icon-button compact"
             type="button"
-            aria-label={collapsed ? "Expand layers" : "Collapse layers"}
+            aria-label={collapsed ? "Expandir capas" : "Contraer capas"}
             aria-expanded={!collapsed}
             onClick={() => setCollapsed(!collapsed)}
           >
@@ -123,7 +126,7 @@ export const LeftDock: React.FC<LeftDockProps> = ({
 
         <div id="layersBody" className="panel-body">
           <div className="section-label">
-            <span>GROUPS</span>
+            <span>GRUPOS</span>
             <span id="layerTotal" className="mono">
               {formatNumber(satellites.length)}
             </span>
@@ -140,7 +143,7 @@ export const LeftDock: React.FC<LeftDockProps> = ({
                   data-group={group.id}
                   style={{ "--group-color": group.color } as React.CSSProperties}
                   aria-pressed={on}
-                  aria-label={`${on ? "Hide" : "Show"} ${group.label}`}
+                  aria-label={`${on ? "Ocultar" : "Mostrar"} ${group.label}`}
                   onClick={() => onToggleGroup(group.id)}
                 >
                   <span className="swatch"></span>
@@ -155,7 +158,7 @@ export const LeftDock: React.FC<LeftDockProps> = ({
           <div className="panel-divider"></div>
 
           <div className="section-label">
-            <span>OVERLAYS</span>
+            <span>SUPERPOSICIONES</span>
           </div>
 
           <div id="displayToggles" className="toggle-list">
@@ -180,7 +183,7 @@ export const LeftDock: React.FC<LeftDockProps> = ({
           <div className="panel-divider"></div>
 
           <div className="section-label">
-            <span>ALTITUDE</span>
+            <span>ALTITUD</span>
           </div>
 
           <div id="bandFilters" className="segment-grid">
@@ -192,7 +195,7 @@ export const LeftDock: React.FC<LeftDockProps> = ({
               onClick={() => onToggleBand("low")}
             >
               <span>LEO</span>
-              <small>Low orbit</small>
+              <small>Órbita baja</small>
             </button>
             <button
               className={`band-chip ${display.bands.medium ? "is-active" : ""}`}
@@ -202,7 +205,7 @@ export const LeftDock: React.FC<LeftDockProps> = ({
               onClick={() => onToggleBand("medium")}
             >
               <span>MEO</span>
-              <small>Medium</small>
+              <small>Media</small>
             </button>
             <button
               className={`band-chip ${display.bands.geostationary ? "is-active" : ""}`}
@@ -212,7 +215,7 @@ export const LeftDock: React.FC<LeftDockProps> = ({
               onClick={() => onToggleBand("geostationary")}
             >
               <span>GEO</span>
-              <small>Stationary</small>
+              <small>Estacionaria</small>
             </button>
           </div>
         </div>
@@ -233,7 +236,7 @@ export const LeftDock: React.FC<LeftDockProps> = ({
               id="closeSatCard"
               className="icon-button compact"
               type="button"
-              aria-label="Close satellite details"
+              aria-label="Cerrar detalles del satélite"
               onClick={onCloseCard}
             >
               <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -255,37 +258,37 @@ export const LeftDock: React.FC<LeftDockProps> = ({
 
           <div className="telemetry-grid">
             <div className="telemetry-cell">
-              <span>ALTITUDE</span>
+              <span>ALTITUD</span>
               <strong id="satAltitude" className="mono accent-value">
                 {telemetry.altitude !== null ? formatAltitude(telemetry.altitude, imperial) : "—"}
               </strong>
             </div>
             <div className="telemetry-cell">
-              <span>SPEED</span>
+              <span>VELOCIDAD</span>
               <strong id="satSpeed" className="mono accent-value">
                 {telemetry.speed !== null ? formatSpeed(telemetry.speed, imperial) : "—"}
               </strong>
             </div>
             <div className="telemetry-cell">
-              <span>LATITUDE</span>
+              <span>LATITUD</span>
               <strong id="satLat" className="mono">
                 {formatLat(telemetry.lat)}
               </strong>
             </div>
             <div className="telemetry-cell">
-              <span>LONGITUDE</span>
+              <span>LONGITUD</span>
               <strong id="satLon" className="mono">
                 {formatLon(telemetry.lon)}
               </strong>
             </div>
             <div className="telemetry-cell">
-              <span>PERIOD</span>
+              <span>PERÍODO</span>
               <strong id="satPeriod" className="mono">
                 {selectedSatellite.periodMin ? `${selectedSatellite.periodMin.toFixed(1)} min` : "—"}
               </strong>
             </div>
             <div className="telemetry-cell">
-              <span>INCLINATION</span>
+              <span>INCLINACIÓN</span>
               <strong id="satInclination" className="mono">
                 {selectedSatellite.inclination ? `${selectedSatellite.inclination.toFixed(2)}°` : "—"}
               </strong>
@@ -294,9 +297,9 @@ export const LeftDock: React.FC<LeftDockProps> = ({
 
           <div className="next-pass-summary">
             <span>
-              MY NEXT PASS
+              MI PRÓXIMO PASO
               {isNotificationEnabled && (
-                <span className="notify-indicator" title="Pass alerts enabled for this satellite">
+                <span className="notify-indicator" title="Alertas de paso activadas para este satélite">
                   {" "}· 🔔
                 </span>
               )}
@@ -325,24 +328,22 @@ export const LeftDock: React.FC<LeftDockProps> = ({
             >
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M12 3v3m0 12v3M3 12h3m12 0h3" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                <circle cx="12" cy="12" r="5.2" fill="none" stroke="currentColor" strokeWidth="1.5" />
-                <circle cx="12" cy="12" r="1.2" fill="currentColor" />
               </svg>
-              <span>{isFollowing ? "Following" : "Follow"}</span>
+              <span>{isFollowing ? "Siguiendo" : "Seguir"}</span>
             </button>
             <button id="orbitBtn" className="button secondary" type="button" onClick={onShowOrbit}>
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <ellipse cx="12" cy="12" rx="9" ry="4.8" fill="none" stroke="currentColor" strokeWidth="1.5" transform="rotate(-28 12 12)" />
                 <circle cx="12" cy="12" r="2.2" fill="currentColor" />
               </svg>
-              <span>Show orbit</span>
+              <span>Ver órbita</span>
             </button>
             <button
               id="notifyPassBtn"
               className={`button secondary sat-notify-btn ${isNotificationEnabled ? "is-active" : ""}`}
               type="button"
               aria-pressed={isNotificationEnabled}
-              title={isNotificationEnabled ? "Disable pass notifications" : "Enable browser notification when a pass is imminent"}
+              title={isNotificationEnabled ? "Desactivar avisos de paso" : "Activar aviso en el navegador cuando el paso sea inminente"}
               onClick={onToggleNotification}
             >
               <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -356,7 +357,7 @@ export const LeftDock: React.FC<LeftDockProps> = ({
                 />
                 {isNotificationEnabled && <circle cx="18" cy="4" r="2.5" fill="var(--accent)" />}
               </svg>
-              <span>{isNotificationEnabled ? "Pass alerts enabled (10m prior)" : "Notify on imminent pass"}</span>
+              <span>{isNotificationEnabled ? "Alertas activadas (10 min antes)" : "Avisar en paso inminente"}</span>
             </button>
           </div>
         </section>

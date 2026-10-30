@@ -1,4 +1,4 @@
-const LOCALE = "en-US";
+const LOCALE = "es-ES";
 
 export function pad(value, length = 2) {
   return String(value).padStart(length, "0");
@@ -71,9 +71,9 @@ export function addDays(date, amount) {
 
 export function dayTag(date) {
   const now = new Date();
-  if (sameLocalDay(date, now)) return "Today";
-  if (sameLocalDay(date, addDays(now, 1))) return "Tomorrow";
-  return new Intl.DateTimeFormat(undefined, { weekday: "short" }).format(date);
+  if (sameLocalDay(date, now)) return "Hoy";
+  if (sameLocalDay(date, addDays(now, 1))) return "Mañana";
+  return new Intl.DateTimeFormat(LOCALE, { weekday: "short" }).format(date);
 }
 
 export function formatCountdown(ms) {
@@ -96,15 +96,15 @@ export function formatDuration(seconds) {
 
 export function formatAge(ms) {
   const minutes = Math.max(0, Math.floor(ms / 60000));
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes} min ago`;
+  if (minutes < 1) return "hace un momento";
+  if (minutes < 60) return `hace ${minutes} min`;
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} h ago`;
-  return `${Math.floor(hours / 24)} d ago`;
+  if (hours < 24) return `hace ${hours} h`;
+  return `hace ${Math.floor(hours / 24)} d`;
 }
 
 export function formatNumber(value) {
-  return new Intl.NumberFormat().format(value);
+  return new Intl.NumberFormat(LOCALE).format(value);
 }
 
 export function formatAltitude(altKm, imperial) {
@@ -124,7 +124,7 @@ export function formatDistance(km, imperial) {
 
 const COMPASS_16 = [
   "N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
-  "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW",
+  "S", "SSO", "SO", "OSO", "O", "ONO", "NO", "NNO",
 ];
 
 export function compassDirection(azimuth) {
@@ -136,10 +136,10 @@ export function azimuthLabel(azimuth) {
 }
 
 export function brightnessLabel(magnitude) {
-  if (magnitude <= 0.5) return "Very bright";
-  if (magnitude <= 2.5) return "Bright";
+  if (magnitude <= 0.5) return "Muy brillante";
+  if (magnitude <= 2.5) return "Brillante";
   if (magnitude <= 4.2) return "Visible";
-  return "Faint";
+  return "Tenue";
 }
 
 export function magnitudeLabel(magnitude) {
@@ -156,11 +156,11 @@ export function buildIcs(pass, city) {
   const stamp = toIcsDate(Date.now());
   const escape = (value) =>
     String(value).replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;");
-  const title = escape(`${pass.name} pass over ${city}`);
+  const title = escape(`Paso de ${pass.name} sobre ${city}`);
   const description = escape(
-    `Maximum elevation ${pass.peakElevation.toFixed(0)}° · ` +
+    `Elevación máxima ${pass.peakElevation.toFixed(0)}° · ` +
       `${compassDirection(pass.peakAzimuth)} · ${magnitudeLabel(pass.magnitude)}. ` +
-      `Visible pass computed by Orbital Watch from CelesTrak GP data.`
+      `Paso visible calculado por Orbital Watch a partir de datos GP de CelesTrak.`
   );
   return [
     "BEGIN:VCALENDAR",

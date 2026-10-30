@@ -1,6 +1,6 @@
 {
   "name": "Orbital Watch",
-  "description": "A live, local-first 3D satellite tracker with visible pass prediction, orbital mechanics, and interactive sky dome.",
+  "description": "Rastreador 3D de satélites en vivo con predicción de pasos visibles, mecánica orbital y domo celeste interactivo.",
   "permissions": [],
   "capabilities": []
 }

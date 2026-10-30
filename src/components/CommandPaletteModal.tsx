@@ -64,114 +64,114 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
     () => [
       {
         id: "now",
-        label: "Go to now",
-        detail: "Return the globe and timeline to live time",
+        label: "Ir al presente",
+        detail: "Devolver el globo y la línea de tiempo a la hora actual",
         hint: "N",
-        keywords: "now live reset present time",
+        keywords: "ahora en vivo restablecer presente tiempo now live reset present",
         run: onGoNow,
       },
       {
         id: "starlink",
-        label: "Show Starlink",
-        detail: "Solo the Starlink constellation",
+        label: "Mostrar Starlink",
+        detail: "Aislar la constelación Starlink",
         hint: "",
-        keywords: "show starlink constellation",
+        keywords: "mostrar starlink constelacion show starlink",
         run: () => onSoloGroup("starlink"),
       },
       {
         id: "gps",
-        label: "Show GPS",
-        detail: "Solo the GPS constellation",
+        label: "Mostrar GPS",
+        detail: "Aislar la constelación GPS",
         hint: "",
-        keywords: "show gps navigation navstar",
+        keywords: "mostrar gps navegacion navstar show gps",
         run: () => onSoloGroup("gps"),
       },
       {
         id: "weather",
-        label: "Show weather satellites",
-        detail: "Solo weather and Earth-observation satellites",
+        label: "Mostrar satélites meteorológicos",
+        detail: "Aislar satélites meteorológicos y de observación",
         hint: "",
-        keywords: "show weather noaa goes observation",
+        keywords: "mostrar clima meteorologicos noaa goes observacion weather",
         run: () => onSoloGroup("weather"),
       },
       {
         id: "stations",
-        label: "Show space stations",
-        detail: "Solo crewed stations and visiting vehicles",
+        label: "Mostrar estaciones espaciales",
+        detail: "Aislar estaciones tripuladas y naves visitantes",
         hint: "",
-        keywords: "show space station iss css",
+        keywords: "mostrar estacion espacial eei iss css space station",
         run: () => onSoloGroup("stations"),
       },
       {
         id: "showall",
-        label: "Show all satellites",
-        detail: "Restore every active group",
+        label: "Mostrar todos los satélites",
+        detail: "Restablecer todos los grupos activos",
         hint: "",
-        keywords: "show all satellites groups restore",
+        keywords: "mostrar todos satelites grupos restablecer show all",
         run: onShowAll,
       },
       {
         id: "iss",
-        label: "Focus the ISS",
-        detail: "Select and follow the International Space Station",
+        label: "Enfocar la EEI",
+        detail: "Seleccionar y seguir la Estación Espacial Internacional",
         hint: "",
-        keywords: "iss zarya station international space",
+        keywords: "eei iss zarya estacion espacial internacional focus",
         run: onFocusIss,
       },
       {
         id: "night",
-        label: "Toggle night vision",
-        detail: "Dim the entire interface to red",
+        label: "Alternar visión nocturna",
+        detail: "Atenuar toda la interfaz a tonos rojos",
         hint: "",
-        keywords: "night vision red dark",
+        keywords: "vision nocturna rojo oscuro night vision red",
         run: onToggleNight,
       },
       {
         id: "orbits",
-        label: "Toggle orbit lines",
-        detail: "Show or hide the selected orbit",
+        label: "Alternar líneas de órbita",
+        detail: "Mostrar u ocultar la órbita seleccionada",
         hint: "O",
-        keywords: "orbit path show hide",
+        keywords: "orbita lineas trayectoria mostrar ocultar orbit",
         run: () => onToggleOverlay("orbits"),
       },
       {
         id: "trails",
-        label: "Toggle trails",
-        detail: "Show or hide the fading trail",
+        label: "Alternar estelas",
+        detail: "Mostrar u ocultar la estela degradada",
         hint: "",
-        keywords: "trail wake show hide",
+        keywords: "estela rastro cola mostrar ocultar trail",
         run: () => onToggleOverlay("trails"),
       },
       {
         id: "labels",
-        label: "Toggle labels",
-        detail: "Show or hide prominent satellite labels",
+        label: "Alternar etiquetas",
+        detail: "Mostrar u ocultar etiquetas de satélites principales",
         hint: "L",
-        keywords: "label names show hide",
+        keywords: "etiquetas rotulos nombres mostrar ocultar labels",
         run: () => onToggleOverlay("labels"),
       },
       {
         id: "citylights",
-        label: "Toggle city lights",
-        detail: "Show or hide lights on the night side",
+        label: "Alternar luces urbanas",
+        detail: "Mostrar u ocultar luces nocturnas de la Tierra",
         hint: "",
-        keywords: "city lights night earth",
+        keywords: "luces urbanas ciudades noche tierra city lights",
         run: () => onToggleOverlay("cityLights"),
       },
       {
         id: "settings",
-        label: "Open settings",
-        detail: "Units, clock, reduced motion",
+        label: "Abrir ajustes",
+        detail: "Unidades, formato de hora, movimiento reducido",
         hint: "",
-        keywords: "settings preferences options",
+        keywords: "ajustes preferencias opciones configuracion settings",
         run: onOpenSettings,
       },
       {
         id: "help",
-        label: "Keyboard shortcuts",
-        detail: "Open the shortcut reference",
+        label: "Atajos de teclado",
+        detail: "Abrir la guía de atajos de teclado",
         hint: "?",
-        keywords: "help shortcuts keys keyboard",
+        keywords: "ayuda atajos teclas teclado help shortcuts",
         run: onOpenHelp,
       },
     ],
@@ -196,7 +196,7 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
     if (q) {
       matchedCmds = COMMANDS.filter((cmd) => {
         const haystack = normalizeText(`${cmd.label} ${cmd.detail} ${cmd.keywords}`);
-        return haystack.includes(q) || (q === "SHOW" && cmd.id !== "now");
+        return haystack.includes(q) || (q === "MOSTRAR" && cmd.id !== "now") || (q === "SHOW" && cmd.id !== "now");
       }).slice(0, 8);
     } else {
       matchedCmds = COMMANDS.slice(0, 7);
@@ -360,7 +360,7 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
 
   return (
     <div id="commandPalette" className="modal-layer palette-layer" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="palette glass" role="dialog" aria-modal="true" aria-label="Command palette">
+      <div className="palette glass" role="dialog" aria-modal="true" aria-label="Paleta de comandos">
         <div className="palette-input-row">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="10.8" cy="10.8" r="6.4" fill="none" stroke="currentColor" strokeWidth="1.6" />
@@ -370,8 +370,8 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
             ref={inputRef}
             id="paletteInput"
             type="text"
-            placeholder="Search satellites, cities, or commands"
-            aria-label="Command palette search"
+            placeholder="Buscar satélites, ciudades o comandos"
+            aria-label="Búsqueda en paleta de comandos"
             autoComplete="off"
             spellCheck={false}
             value={query}
@@ -384,25 +384,25 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
         </div>
 
         <div id="paletteResults" className="palette-results">
-          {renderSection("COMMANDS", commandItems)}
-          {renderSection("SATELLITES", satItems)}
-          {renderSection("CITIES", cityItems)}
+          {renderSection("COMANDOS", commandItems)}
+          {renderSection("SATÉLITES", satItems)}
+          {renderSection("CIUDADES", cityItems)}
 
           {allItems.length === 0 && (
-            <div className="palette-empty">No satellites, cities, or commands found.</div>
+            <div className="palette-empty">No se encontraron satélites, ciudades ni comandos.</div>
           )}
         </div>
 
         <div className="palette-footer">
           <span>
             <kbd>↑</kbd>
-            <kbd>↓</kbd> Navigate
+            <kbd>↓</kbd> Navegar
           </span>
           <span>
-            <kbd>↵</kbd> Select
+            <kbd>↵</kbd> Seleccionar
           </span>
           <span>
-            <kbd>Esc</kbd> Close
+            <kbd>Esc</kbd> Cerrar
           </span>
         </div>
       </div>

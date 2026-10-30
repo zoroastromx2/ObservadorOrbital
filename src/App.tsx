@@ -190,7 +190,7 @@ export const App: React.FC = () => {
 
   // App state
   const [booted, setBooted] = useState(false);
-  const [bootStatus, setBootStatus] = useState("Loading CelesTrak orbital catalog");
+  const [bootStatus, setBootStatus] = useState("Cargando catálogo orbital de CelesTrak");
   const [satellites, setSatellites] = useState<Satellite[]>([]);
   const [meta, setMeta] = useState<any>(null);
   const [cities, setCities] = useState<CityInfo[]>([]);
@@ -207,7 +207,7 @@ export const App: React.FC = () => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [selectedPass, setSelectedPass] = useState<SatellitePass | null>(null);
-  const [selectedPassStatus, setSelectedPassStatus] = useState<string>("Scanning…");
+  const [selectedPassStatus, setSelectedPassStatus] = useState<string>("Escaneando…");
   const [telemetry, setTelemetry] = useState<{
     altitude: number | null;
     speed: number | null;
@@ -493,7 +493,7 @@ export const App: React.FC = () => {
       setSelectedPass(null);
       startPassScan(loc, satellites);
       if (firstRun) {
-        showToast(`Location set to ${loc.name}. Finding your next ISS pass.`);
+        showToast(`Ubicación establecida en ${loc.name}. Buscando el próximo paso de la EEI.`);
         const iss = satellites.find((s) => s.noradId === 25544);
         if (iss) {
           try {
@@ -539,14 +539,14 @@ export const App: React.FC = () => {
       buildSelectionGeometry(sat, simTime);
 
       if (observer) {
-        setSelectedPassStatus("Scanning…");
+        setSelectedPassStatus("Escaneando…");
         try {
           const rec = getSatrec(sat);
           const p = nextPassForSatellite(rec, sat, observer, Date.now(), 7);
           setSelectedPass(p);
-          setSelectedPassStatus(p ? "" : "None in the next 7 days");
+          setSelectedPassStatus(p ? "" : "Ninguno en los próximos 7 días");
         } catch {
-          setSelectedPassStatus("Pass search unavailable");
+          setSelectedPassStatus("Búsqueda no disponible");
         }
       }
     },
@@ -574,7 +574,7 @@ export const App: React.FC = () => {
     const sat = satellites[selectedIndex];
     if (sat) buildSelectionGeometry(sat, simTime);
     globeRef.current?.flyToSatellite(selectedIndex, 2.65);
-    showToast("Orbit and ground track shown");
+    showToast("Órbita y traza terrestre mostradas");
   }, [selectedIndex, display.orbits, satellites, buildSelectionGeometry, simTime, showToast]);
 
   // Layer toggles
@@ -591,10 +591,17 @@ export const App: React.FC = () => {
 
   const handleToggleOverlay = useCallback(
     (overlayId: keyof DisplayOptions) => {
+      const overlayNames: Record<string, string> = {
+        orbits: "Órbitas",
+        trails: "Estelas",
+        labels: "Etiquetas",
+        cityLights: "Luces urbanas",
+      };
       setDisplay((prev) => {
         const next = { ...prev, [overlayId]: !prev[overlayId] };
         globeRef.current?.setDisplay(next);
-        showToast(`${overlayId} ${next[overlayId] ? "shown" : "hidden"}`);
+        const name = overlayNames[overlayId] || overlayId;
+        showToast(`${name} ${next[overlayId] ? "activadas" : "desactivadas"}`);
         return next;
       });
     },
@@ -620,7 +627,7 @@ export const App: React.FC = () => {
     setSpeed(1);
     setSimTime(now);
     setTimelineCenter(now);
-    showToast("Back to live time");
+    showToast("Volviendo al tiempo real");
   }, [showToast]);
 
   const handleSetSpeed = useCallback((s: number) => {
@@ -665,7 +672,7 @@ export const App: React.FC = () => {
       anchor.click();
       anchor.remove();
       URL.revokeObjectURL(url);
-      showToast("Calendar event saved");
+      showToast("Paso guardado en el calendario");
     },
     [location, showToast]
   );
@@ -675,15 +682,15 @@ export const App: React.FC = () => {
     (sat: Satellite, pass: SatellitePass, locName: string) => {
       const now = Date.now();
       const minsUntil = Math.max(0, Math.round((pass.startMs - now) / 60000));
-      const timeStr = minsUntil === 0 ? "Overhead now!" : `Starting in ${minsUntil} min`;
+      const timeStr = minsUntil === 0 ? "¡Sobrevolando ahora!" : `Comienza en ${minsUntil} min`;
       const peakEl = Math.round(pass.peakElevation);
       const direction = compassDirection(pass.startAzimuth);
       const brightness = brightnessLabel(pass.magnitude);
 
-      const title = `🛰️ ${sat.name} Pass Imminent (${timeStr})`;
-      const body = `Visible pass over ${locName} starting in ${direction} (Peak ${peakEl}°). ${brightness}. Click to view in sky dome.`;
+      const title = `🛰️ Paso inminente de ${sat.name} (${timeStr})`;
+      const body = `Paso visible sobre ${locName} iniciando hacia el ${direction} (Cúspide ${peakEl}°). ${brightness}. Haz clic para ver en el domo celeste.`;
 
-      showToast(`🔔 ${sat.name} pass imminent: ${timeStr} in ${direction} (peak ${peakEl}°)`, 6000);
+      showToast(`🔔 Paso inminente de ${sat.name}: ${timeStr} hacia el ${direction} (cúspide a ${peakEl}°)`, 6000);
 
       if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
         try {
@@ -713,12 +720,12 @@ export const App: React.FC = () => {
 
     if (isCurrentlyEnabled) {
       setNotifiedNorads((prev) => prev.filter((id) => id !== noradId));
-      showToast(`Pass notifications disabled for ${selectedSat.name}`);
+      showToast(`Avisos de paso desactivados para ${selectedSat.name}`);
       return;
     }
 
     if (typeof window === "undefined" || !("Notification" in window)) {
-      showToast("Browser Notification API is not supported in this browser.");
+      showToast("La API de notificaciones del navegador no está disponible.");
       return;
     }
 
@@ -733,7 +740,7 @@ export const App: React.FC = () => {
 
     if (permission === "granted") {
       setNotifiedNorads((prev) => [...prev, noradId]);
-      showToast(`🔔 Pass alerts enabled for ${selectedSat.name} (10 min prior)`);
+      showToast(`🔔 Alertas de paso activadas para ${selectedSat.name} (10 min antes)`);
 
       const now = Date.now();
       const imminentPass =
@@ -748,11 +755,11 @@ export const App: React.FC = () => {
           : null);
 
       if (imminentPass) {
-        sendImminentPassNotification(selectedSat, imminentPass, location?.name || "your location");
+        sendImminentPassNotification(selectedSat, imminentPass, location?.name || "tu ubicación");
       } else {
         try {
           new Notification(`Orbital Watch: ${selectedSat.name}`, {
-            body: `Notifications enabled! You will be alerted 10 minutes before its next visible pass.`,
+            body: `¡Notificaciones activadas! Te avisaremos 10 minutos antes de su próximo paso visible.`,
             icon: "/favicon.svg",
             tag: `setup-${noradId}`,
           });
@@ -761,9 +768,9 @@ export const App: React.FC = () => {
         }
       }
     } else if (permission === "denied") {
-      showToast("Notification permission was denied. Please allow notifications in site settings.");
+      showToast("Permiso de notificaciones denegado en el navegador.");
     } else {
-      showToast("Notification permission was dismissed.");
+      showToast("Permiso de notificaciones cancelado.");
     }
   }, [
     selectedSat,
@@ -798,7 +805,7 @@ export const App: React.FC = () => {
             alertedPassesRef.current.add(passKey);
             const sat = satellites.find((s) => s.noradId === pass.noradId);
             if (sat) {
-              sendImminentPassNotification(sat, pass, location?.name || "your location");
+              sendImminentPassNotification(sat, pass, location?.name || "tu ubicación");
             }
           }
         }
@@ -815,7 +822,7 @@ export const App: React.FC = () => {
             alertedPassesRef.current.add(passKey);
             const sat = satellites.find((s) => s.noradId === selectedPass.noradId);
             if (sat) {
-              sendImminentPassNotification(sat, selectedPass, location?.name || "your location");
+              sendImminentPassNotification(sat, selectedPass, location?.name || "tu ubicación");
             }
           }
         }
@@ -831,10 +838,10 @@ export const App: React.FC = () => {
     const sat = selectedSat;
     const date = new Date(simTime);
     const timeText = `${date.toISOString().slice(0, 19).replace("T", " ")} UTC`;
-    const name = sat ? sat.name : "Live Earth view";
+    const name = sat ? sat.name : "Vista en vivo de la Tierra";
     const subtitle = sat
       ? `${GROUP_BY_ID[sat.group]?.label || ""} · NORAD ${sat.noradId} · CelesTrak GP`
-      : `${satellites.length} active satellites · CelesTrak GP`;
+      : `${satellites.length} satélites activos · CelesTrak GP`;
     globeRef.current
       .captureShare({ name, timeText, subtitle })
       .then((blob: Blob) => {
@@ -850,9 +857,9 @@ export const App: React.FC = () => {
         anchor.click();
         anchor.remove();
         URL.revokeObjectURL(url);
-        showToast("Clean PNG exported");
+        showToast("Vista PNG limpia exportada");
       })
-      .catch(() => showToast("Could not export this view"));
+      .catch(() => showToast("No se pudo exportar esta vista"));
   }, [selectedSat, simTime, satellites.length, showToast]);
 
   // Solo group from palette
@@ -865,7 +872,7 @@ export const App: React.FC = () => {
         globeRef.current?.setDisplay(next);
         return next;
       });
-      showToast(`Showing only ${GROUP_BY_ID[groupId]?.label || groupId}`);
+      showToast(`Mostrando solo ${GROUP_BY_ID[groupId]?.label || groupId}`);
     },
     [showToast]
   );
@@ -878,7 +885,7 @@ export const App: React.FC = () => {
       globeRef.current?.setDisplay(next);
       return next;
     });
-    showToast("Showing all active satellites");
+    showToast("Mostrando todos los satélites activos");
   }, [showToast]);
 
   const handleFocusIss = useCallback(() => {
@@ -893,7 +900,7 @@ export const App: React.FC = () => {
     async function initApp() {
       if (!viewportRef.current) return;
 
-      setBootStatus("Loading CelesTrak orbital catalog");
+      setBootStatus("Cargando catálogo orbital de CelesTrak");
       const globe = new Globe(viewportRef.current, {
         onHover: (index: number | null) => {
           if (index === null || index === undefined) {
@@ -911,7 +918,7 @@ export const App: React.FC = () => {
           handleSelectSatellite(index, true);
           if (index !== null) {
             const s = satellites[index];
-            if (s) showToast(`${s.name} selected`);
+            if (s) showToast(`${s.name} seleccionado`);
           }
         },
         onFollowChange: (val: boolean) => {
@@ -951,7 +958,7 @@ export const App: React.FC = () => {
       globe.setTime(Date.now());
       globe.applyVisibility();
 
-      setBootStatus(`Initialising ${prep.satellites.length} SGP4 orbits`);
+      setBootStatus(`Iniciando ${prep.satellites.length} órbitas SGP4`);
       const runtime = new PositionRuntime(prep.satellites, (positions, valid, timeMs) => {
         globe.updatePositions(positions, valid, timeMs);
       });
@@ -992,7 +999,7 @@ export const App: React.FC = () => {
 
     initApp().catch((err) => {
       console.error(err);
-      setBootStatus(`Unable to start: ${err.message}. Check the data cache.`);
+      setBootStatus(`No se pudo iniciar: ${err.message}. Comprueba la caché de datos.`);
     });
 
     return () => {

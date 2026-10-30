@@ -21,10 +21,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onUpdate
   }, [onClose]);
 
   return (
-    <div ref={popoverRef} id="settingsPop" className="popover glass" role="dialog" aria-label="Settings">
+    <div ref={popoverRef} id="settingsPop" className="popover glass" role="dialog" aria-label="Ajustes">
       <div className="popover-header">
-        <h3>Settings</h3>
-        <button id="closeSettings" className="icon-button compact" type="button" aria-label="Close settings" onClick={onClose}>
+        <h3>Ajustes</h3>
+        <button id="closeSettings" className="icon-button compact" type="button" aria-label="Cerrar ajustes" onClick={onClose}>
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
           </svg>
@@ -33,8 +33,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onUpdate
 
       <div className="setting-row">
         <div>
-          <span className="setting-name">Units</span>
-          <span className="setting-help">Altitude and speed</span>
+          <span className="setting-name">Unidades</span>
+          <span className="setting-help">Altitud y velocidad</span>
         </div>
         <div className="segmented" data-setting="units">
           <button
@@ -43,7 +43,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onUpdate
             aria-pressed={settings.units === "metric"}
             onClick={() => onUpdate((prev) => ({ ...prev, units: "metric" }))}
           >
-            Metric
+            Métrico
           </button>
           <button
             type="button"
@@ -58,8 +58,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onUpdate
 
       <div className="setting-row">
         <div>
-          <span className="setting-name">Time format</span>
-          <span className="setting-help">Clocks and passes</span>
+          <span className="setting-name">Formato de hora</span>
+          <span className="setting-help">Relojes y pasos</span>
         </div>
         <div className="segmented" data-setting="clock">
           <button
@@ -83,8 +83,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onUpdate
 
       <div className="setting-row">
         <div>
-          <span className="setting-name">Reduced motion</span>
-          <span className="setting-help">Disable camera flights</span>
+          <span className="setting-name">Movimiento reducido</span>
+          <span className="setting-help">Desactivar vuelos de cámara</span>
         </div>
         <button
           id="reducedMotionToggle"
@@ -98,7 +98,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onUpdate
         </button>
       </div>
 
-      <div className="popover-note">Settings are saved locally.</div>
+      <div className="popover-note">Los ajustes se guardan localmente.</div>
     </div>
   );
 };

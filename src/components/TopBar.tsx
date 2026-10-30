@@ -38,7 +38,7 @@ export const TopBar: React.FC<TopBarProps> = ({
 
   return (
     <header id="topbar" className="glass">
-      <a className="brand" href="#" aria-label="Orbital Watch home" onClick={(e) => e.preventDefault()}>
+      <a className="brand" href="#" aria-label="Inicio de Orbital Watch" onClick={(e) => e.preventDefault()}>
         <svg className="brand-mark" viewBox="0 0 42 42" aria-hidden="true">
           <circle cx="21" cy="21" r="8.5" fill="none" stroke="currentColor" strokeWidth="1.4" opacity=".45" />
           <ellipse
@@ -59,7 +59,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         </span>
       </a>
 
-      <div className="top-clocks" aria-label="Clocks">
+      <div className="top-clocks" aria-label="Relojes">
         <div className="clock-pair">
           <span className="micro-label">UTC</span>
           <span id="utcClock" className="mono clock-value">
@@ -81,24 +81,24 @@ export const TopBar: React.FC<TopBarProps> = ({
           id="updatedLine"
           title={
             isOffline
-              ? "Network unavailable. Positions and passes are computed from the local CelesTrak cache."
-              : "Live orbital catalog cached locally and refreshed at most every 6 hours."
+              ? "Sin conexión a red. Las posiciones y pasos se calculan a partir de la caché local de CelesTrak."
+              : "Catálogo orbital en vivo guardado localmente y actualizado como máximo cada 6 horas."
           }
         >
           <span className={`status-dot ${isOffline ? "offline" : ""}`} id="cacheDot"></span>
           <span id="dataAge">
             {meta
               ? isOffline
-                ? `Offline · cache ${formatAge(age)}`
-                : `Updated ${formatAge(age)}`
-              : "Loading orbital data"}
+                ? `Desconectado · caché ${formatAge(age)}`
+                : `Actualizado ${formatAge(age)}`
+              : "Cargando datos orbitales"}
           </span>
         </div>
         <div className="meta-line">
           <span id="satCount" className="mono">
             {satCount ? formatNumber(satCount) : "—"}
           </span>
-          <span>active satellites</span>
+          <span>satélites activos</span>
         </div>
       </div>
 
@@ -110,8 +110,8 @@ export const TopBar: React.FC<TopBarProps> = ({
         <input
           id="searchOpen"
           type="search"
-          placeholder="Search satellites, cities…"
-          aria-label="Search satellites, cities, and commands"
+          placeholder="Buscar satélites, ciudades…"
+          aria-label="Buscar satélites, ciudades y comandos"
           autoComplete="off"
           spellCheck={false}
           readOnly
@@ -124,8 +124,8 @@ export const TopBar: React.FC<TopBarProps> = ({
           id="shareBtn"
           className="icon-button"
           type="button"
-          aria-label="Export current view as PNG"
-          title="Share view"
+          aria-label="Exportar vista actual como PNG"
+          title="Compartir vista"
           onClick={onShare}
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -143,8 +143,8 @@ export const TopBar: React.FC<TopBarProps> = ({
           id="nightBtn"
           className="icon-button"
           type="button"
-          aria-label="Toggle night vision"
-          title="Night vision"
+          aria-label="Alternar visión nocturna"
+          title="Visión nocturna"
           onClick={onToggleNight}
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -161,8 +161,8 @@ export const TopBar: React.FC<TopBarProps> = ({
           id="settingsBtn"
           className="icon-button"
           type="button"
-          aria-label="Settings"
-          title="Settings"
+          aria-label="Ajustes"
+          title="Ajustes"
           onClick={onOpenSettings}
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -180,8 +180,8 @@ export const TopBar: React.FC<TopBarProps> = ({
           id="helpBtn"
           className="icon-button desktop-only"
           type="button"
-          aria-label="Keyboard shortcuts"
-          title="Keyboard shortcuts"
+          aria-label="Atajos de teclado"
+          title="Atajos de teclado"
           onClick={onOpenHelp}
         >
           <span className="mono help-glyph">?</span>

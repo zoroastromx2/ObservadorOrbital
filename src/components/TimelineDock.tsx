@@ -84,8 +84,8 @@ export const TimelineDock: React.FC<TimelineDockProps> = ({
       const pos = ((b.markerTime - start) / (end - start)) * 100;
       const title =
         b.count > 1
-          ? `${b.count} visible passes near ${formatTime(new Date(b.markerTime), use24h)}`
-          : `${b.name} · peak ${formatTime(new Date(b.markerTime), use24h)}`;
+          ? `${b.count} pasos visibles cerca de las ${formatTime(new Date(b.markerTime), use24h)}`
+          : `${b.name} · cúspide a las ${formatTime(new Date(b.markerTime), use24h)}`;
       const height = 5 + Math.round((b.peakElevation / 90) * 4) + Math.min(7, b.count * 0.35);
       return { pos, title, height };
     });
@@ -130,13 +130,13 @@ export const TimelineDock: React.FC<TimelineDockProps> = ({
   };
 
   return (
-    <footer id="timelineDock" className={`glass timeline ${!playing ? "is-paused" : ""}`} aria-label="Time controls">
+    <footer id="timelineDock" className={`glass timeline ${!playing ? "is-paused" : ""}`} aria-label="Controles temporales">
       <div className="timeline-transport">
         <button
           id="playBtn"
           className={`transport-button play ${!playing ? "is-paused" : ""}`}
           type="button"
-          aria-label={playing ? "Pause" : "Play"}
+          aria-label={playing ? "Pausar" : "Reproducir"}
           onClick={onTogglePlay}
         >
           <svg className="icon-play" viewBox="0 0 24 24" aria-hidden="true">
@@ -148,10 +148,10 @@ export const TimelineDock: React.FC<TimelineDockProps> = ({
         </button>
 
         <button id="nowBtn" className="button now-button" type="button" onClick={onGoNow}>
-          Now
+          Ahora
         </button>
 
-        <div id="speedButtons" className="speed-group" aria-label="Playback speed">
+        <div id="speedButtons" className="speed-group" aria-label="Velocidad de reproducción">
           {[1, 10, 100, 1000].map((s) => (
             <button
               key={s}
@@ -174,7 +174,7 @@ export const TimelineDock: React.FC<TimelineDockProps> = ({
           className="timeline-track"
           role="slider"
           tabIndex={0}
-          aria-label="24 hour timeline"
+          aria-label="Línea temporal de 24 horas"
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={Math.round(percent)}
@@ -213,7 +213,7 @@ export const TimelineDock: React.FC<TimelineDockProps> = ({
       <div className="timeline-mode">
         <span className="live-row">
           <span id="liveDot" className={`status-dot ${isLive && playing ? "accent" : "muted"}`}></span>
-          <span id="timelineMode">{!playing ? "PAUSED" : isLive ? "LIVE" : "SIM"}</span>
+          <span id="timelineMode">{!playing ? "PAUSADO" : isLive ? "EN VIVO" : "SIM"}</span>
         </span>
         <span id="simTime" className="mono">
           {formatClock(new Date(simTime), use24h)}

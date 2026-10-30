@@ -1,9 +1,9 @@
 export const GROUPS = [
-  { id: "stations", label: "Space stations", color: "#D55E00", short: "Stations" },
-  { id: "gps", label: "GPS", color: "#56B4E9", short: "GPS" },
-  { id: "weather", label: "Weather", color: "#009E73", short: "Weather" },
+  { id: "stations", label: "Estaciones espaciales", color: "#D55E00", short: "Estaciones" },
+  { id: "gps", label: "GPS / Navegación", color: "#56B4E9", short: "GPS" },
+  { id: "weather", label: "Meteorológicos", color: "#009E73", short: "Clima" },
   { id: "starlink", label: "Starlink", color: "#E69F00", short: "Starlink" },
-  { id: "other", label: "Other", color: "#9AA7BA", short: "Other" },
+  { id: "other", label: "Otros", color: "#9AA7BA", short: "Otros" },
 ];
 
 export const GROUP_BY_ID = Object.fromEntries(GROUPS.map((group) => [group.id, group]));

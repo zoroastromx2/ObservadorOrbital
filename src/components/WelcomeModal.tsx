@@ -84,14 +84,14 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
       const city = suggestions[activeSuggestion] || suggestions[0];
       if (city) chooseCity(city);
       else {
-        setErrorMsg("Choose a city from the suggestions to continue.");
+        setErrorMsg("Elige una ciudad de las sugerencias para continuar.");
       }
     }
   };
 
   const handleGeolocation = () => {
     if (!navigator.geolocation) {
-      setErrorMsg("This browser does not provide a location. Search for your city instead.");
+      setErrorMsg("Este navegador no proporciona ubicación. Busca tu ciudad manualmente.");
       return;
     }
     setErrorMsg(null);
@@ -102,7 +102,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
         const { latitude, longitude } = position.coords;
         const nearest = nearestCity(cities, latitude, longitude);
         const loc: LocationInfo = {
-          name: nearest.city && nearest.distanceKm < 80 ? nearest.city.name : "My location",
+          name: nearest.city && nearest.distanceKm < 80 ? nearest.city.name : "Mi ubicación",
           admin: nearest.city?.admin || "",
           country: nearest.city?.country || "",
           lat: latitude,
@@ -114,8 +114,8 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
         setLocating(false);
         setErrorMsg(
           err.code === 1
-            ? "Location permission was denied. Search for your city instead."
-            : "Your location could not be determined. Search for your city instead."
+            ? "Permiso de ubicación denegado. Busca tu ciudad manualmente."
+            : "No se pudo determinar tu ubicación. Busca tu ciudad manualmente."
         );
       },
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 }
@@ -126,7 +126,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
     <div id="welcome" className="modal-layer welcome-layer">
       <div className="welcome-card glass">
         {mode === "change" && (
-          <button id="welcomeClose" className="icon-button welcome-close" type="button" aria-label="Close location picker" onClick={onClose}>
+          <button id="welcomeClose" className="icon-button welcome-close" type="button" aria-label="Cerrar selector de ubicación" onClick={onClose}>
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
             </svg>
@@ -134,7 +134,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
         )}
 
         <div className="welcome-topline">
-          <span className="eyebrow">PERSONAL MISSION CONTROL</span>
+          <span className="eyebrow">CENTRO DE CONTROL PERSONAL</span>
           {mode === "first" && (
             <span id="welcomeCoordinate" className="welcome-coordinate mono">
               {currentLocation ? `LAT ${currentLocation.lat.toFixed(1)} · LON ${currentLocation.lon.toFixed(1)}` : "LAT — · LON —"}
@@ -149,11 +149,11 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
         </div>
 
         <h1>
-          What can you see
+          ¿Qué puedes ver
           <br />
-          <em>from where you are?</em>
+          <em>desde donde estás?</em>
         </h1>
-        <p className="welcome-copy">Find your next visible satellite pass. Your location is used only on this device.</p>
+        <p className="welcome-copy">Descubre tu próximo paso de satélite visible. Tu ubicación solo se usa en este dispositivo.</p>
 
         <form
           id="locationForm"
@@ -163,11 +163,11 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
             e.preventDefault();
             const city = suggestions[activeSuggestion] || suggestions[0];
             if (city) chooseCity(city);
-            else setErrorMsg("Choose a city from the suggestions to continue.");
+            else setErrorMsg("Elige una ciudad de las sugerencias para continuar.");
           }}
         >
           <label className="welcome-search-label" htmlFor="welcomeSearch">
-            Your city
+            Tu ciudad
           </label>
           <div className="welcome-search-row">
             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -178,8 +178,8 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
               ref={inputRef}
               id="welcomeSearch"
               type="search"
-              placeholder="Search for a city"
-              aria-label="Search for a city"
+              placeholder="Buscar una ciudad"
+              aria-label="Buscar una ciudad"
               autoCapitalize="words"
               value={query}
               onChange={(e) => {
@@ -188,12 +188,12 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
               }}
               onKeyDown={handleKeyDown}
             />
-            <button type="submit" className="welcome-submit" aria-label="Use selected city">
+            <button type="submit" className="welcome-submit" aria-label="Usar ciudad seleccionada">
               ↵
             </button>
           </div>
 
-          <div id="welcomeSuggestions" className="city-suggestions" role="listbox" aria-label="City suggestions">
+          <div id="welcomeSuggestions" className="city-suggestions" role="listbox" aria-label="Sugerencias de ciudades">
             {suggestions.map((city, idx) => (
               <button
                 key={`${city.name}-${city.country}-${idx}`}
@@ -207,12 +207,12 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                 <span>{`${city.admin ? `${city.admin} · ` : ""}${city.country}`}</span>
               </button>
             ))}
-            {suggestions.length === 0 && <div className="palette-empty">No matching city. Try a nearby major city.</div>}
+            {suggestions.length === 0 && <div className="palette-empty">No se encontró esa ciudad. Prueba con una ciudad cercana importante.</div>}
           </div>
         </form>
 
         <div className="welcome-divider">
-          <span>OR</span>
+          <span>O</span>
         </div>
 
         <button id="useLocation" className="button location-action" type="button" disabled={locating} onClick={handleGeolocation}>
@@ -221,7 +221,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
             <circle cx="12" cy="12" r="2.1" fill="currentColor" />
             <path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
-          <span>{locating ? "Locating…" : "Use my location"}</span>
+          <span>{locating ? "Localizando…" : "Usar mi ubicación"}</span>
         </button>
 
         {errorMsg && (
@@ -230,7 +230,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
           </p>
         )}
 
-        <p className="welcome-footnote">CelesTrak GP elements · SGP4 pass prediction</p>
+        <p className="welcome-footnote">Elementos orbitales CelesTrak · Predicción de pasos SGP4</p>
       </div>
     </div>
   );

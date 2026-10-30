@@ -15,7 +15,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
 }) => {
   return (
     <>
-      <div id="mobileNav" className="glass mobile-nav" aria-label="Panel shortcuts">
+      <div id="mobileNav" className="glass mobile-nav" aria-label="Acceso rápido a paneles">
         <button
           type="button"
           data-sheet="layers"
@@ -33,7 +33,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
               strokeLinejoin="round"
             />
           </svg>
-          <span>Layers</span>
+          <span>Capas</span>
         </button>
 
         <button
@@ -52,7 +52,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
               strokeWidth="1.5"
             />
           </svg>
-          <span>Tonight</span>
+          <span>Esta noche</span>
         </button>
 
         {hasSatelliteSelected && (
@@ -78,7 +78,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
                 transform="rotate(-28 12 12)"
               />
             </svg>
-            <span>Satellite</span>
+            <span>Satélite</span>
           </button>
         )}
       </div>

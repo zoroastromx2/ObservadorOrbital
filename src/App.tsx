@@ -12,6 +12,8 @@ import {
   formatSpeed,
   buildIcs,
   icsFilename,
+  compassDirection,
+  brightnessLabel,
 } from "./lib/format.js";
 import {
   ommToSatrec,
@@ -51,6 +53,7 @@ import { BootScreen } from "./components/BootScreen";
 
 const PREF_KEY = "orbital-watch-prefs-v1";
 const LOCATION_KEY = "orbital-watch-location-v1";
+const NOTIFY_KEY = "orbital-watch-notifications-v1";
 const DAY = 86400000;
 
 function readJson<T>(key: string, fallback: T): T {
@@ -228,6 +231,16 @@ export const App: React.FC = () => {
     totalFound: 0,
   });
   const [spotlightPass, setSpotlightPass] = useState<SatellitePass | null>(null);
+
+  // Pass Notifications
+  const [notifiedNorads, setNotifiedNorads] = useState<number[]>(() =>
+    readJson<number[]>(NOTIFY_KEY, [])
+  );
+  const alertedPassesRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    writeJson(NOTIFY_KEY, notifiedNorads);
+  }, [notifiedNorads]);
 
   // Modals & Sheets
   const [welcomeOpen, setWelcomeOpen] = useState(false);
@@ -656,6 +669,161 @@ export const App: React.FC = () => {
     },
     [location, showToast]
   );
+
+  // Send imminent pass notification using browser Notification API
+  const sendImminentPassNotification = useCallback(
+    (sat: Satellite, pass: SatellitePass, locName: string) => {
+      const now = Date.now();
+      const minsUntil = Math.max(0, Math.round((pass.startMs - now) / 60000));
+      const timeStr = minsUntil === 0 ? "Overhead now!" : `Starting in ${minsUntil} min`;
+      const peakEl = Math.round(pass.peakElevation);
+      const direction = compassDirection(pass.startAzimuth);
+      const brightness = brightnessLabel(pass.magnitude);
+
+      const title = `🛰️ ${sat.name} Pass Imminent (${timeStr})`;
+      const body = `Visible pass over ${locName} starting in ${direction} (Peak ${peakEl}°). ${brightness}. Click to view in sky dome.`;
+
+      showToast(`🔔 ${sat.name} pass imminent: ${timeStr} in ${direction} (peak ${peakEl}°)`, 6000);
+
+      if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+        try {
+          const notif = new Notification(title, {
+            body,
+            icon: "/favicon.svg",
+            tag: `pass-${pass.noradId}-${pass.startMs}`,
+          });
+          notif.onclick = () => {
+            window.focus();
+            handleSelectSatellite(sat.index, true);
+            handleOpenPass(pass);
+          };
+        } catch (e) {
+          console.warn("Failed to dispatch browser notification:", e);
+        }
+      }
+    },
+    [showToast, handleSelectSatellite, handleOpenPass]
+  );
+
+  // Toggle notification for selected satellite
+  const handleToggleNotification = useCallback(async () => {
+    if (!selectedSat) return;
+    const noradId = selectedSat.noradId;
+    const isCurrentlyEnabled = notifiedNorads.includes(noradId);
+
+    if (isCurrentlyEnabled) {
+      setNotifiedNorads((prev) => prev.filter((id) => id !== noradId));
+      showToast(`Pass notifications disabled for ${selectedSat.name}`);
+      return;
+    }
+
+    if (typeof window === "undefined" || !("Notification" in window)) {
+      showToast("Browser Notification API is not supported in this browser.");
+      return;
+    }
+
+    let permission = Notification.permission;
+    if (permission === "default") {
+      try {
+        permission = await Notification.requestPermission();
+      } catch (e) {
+        console.warn("Notification request permission error:", e);
+      }
+    }
+
+    if (permission === "granted") {
+      setNotifiedNorads((prev) => [...prev, noradId]);
+      showToast(`🔔 Pass alerts enabled for ${selectedSat.name} (10 min prior)`);
+
+      const now = Date.now();
+      const imminentPass =
+        passes.find(
+          (p) => p.noradId === noradId && p.startMs - now <= 10 * 60 * 1000 && p.endMs > now
+        ) ||
+        (selectedPass &&
+        selectedPass.noradId === noradId &&
+        selectedPass.startMs - now <= 10 * 60 * 1000 &&
+        selectedPass.endMs > now
+          ? selectedPass
+          : null);
+
+      if (imminentPass) {
+        sendImminentPassNotification(selectedSat, imminentPass, location?.name || "your location");
+      } else {
+        try {
+          new Notification(`Orbital Watch: ${selectedSat.name}`, {
+            body: `Notifications enabled! You will be alerted 10 minutes before its next visible pass.`,
+            icon: "/favicon.svg",
+            tag: `setup-${noradId}`,
+          });
+        } catch {
+          /* ignore */
+        }
+      }
+    } else if (permission === "denied") {
+      showToast("Notification permission was denied. Please allow notifications in site settings.");
+    } else {
+      showToast("Notification permission was dismissed.");
+    }
+  }, [
+    selectedSat,
+    notifiedNorads,
+    showToast,
+    passes,
+    selectedPass,
+    location,
+    sendImminentPassNotification,
+  ]);
+
+  // Imminent pass monitor: check subscribed satellites every 10 seconds
+  useEffect(() => {
+    if (
+      typeof window === "undefined" ||
+      !("Notification" in window) ||
+      Notification.permission !== "granted" ||
+      !notifiedNorads.length
+    ) {
+      return;
+    }
+
+    const checkInterval = setInterval(() => {
+      const now = Date.now();
+      for (const noradId of notifiedNorads) {
+        const satPasses = passes.filter((p) => p.noradId === noradId);
+        for (const pass of satPasses) {
+          const passKey = `${pass.noradId}-${pass.startMs}`;
+          const timeUntilStart = pass.startMs - now;
+          const isImminent = timeUntilStart <= 10 * 60 * 1000 && pass.endMs > now;
+          if (isImminent && !alertedPassesRef.current.has(passKey)) {
+            alertedPassesRef.current.add(passKey);
+            const sat = satellites.find((s) => s.noradId === pass.noradId);
+            if (sat) {
+              sendImminentPassNotification(sat, pass, location?.name || "your location");
+            }
+          }
+        }
+
+        // Also check selectedPass if it belongs to this satellite and is imminent
+        if (
+          selectedPass &&
+          selectedPass.noradId === noradId &&
+          selectedPass.startMs - now <= 10 * 60 * 1000 &&
+          selectedPass.endMs > now
+        ) {
+          const passKey = `${selectedPass.noradId}-${selectedPass.startMs}`;
+          if (!alertedPassesRef.current.has(passKey)) {
+            alertedPassesRef.current.add(passKey);
+            const sat = satellites.find((s) => s.noradId === selectedPass.noradId);
+            if (sat) {
+              sendImminentPassNotification(sat, selectedPass, location?.name || "your location");
+            }
+          }
+        }
+      }
+    }, 10000);
+
+    return () => clearInterval(checkInterval);
+  }, [notifiedNorads, passes, selectedPass, satellites, location, sendImminentPassNotification]);
 
   // Export clean PNG
   const handleShare = useCallback(() => {
@@ -1090,6 +1258,8 @@ export const App: React.FC = () => {
         onCloseCard={() => handleSelectSatellite(null)}
         onToggleFollow={handleToggleFollow}
         onShowOrbit={handleShowOrbit}
+        isNotificationEnabled={selectedSat ? notifiedNorads.includes(selectedSat.noradId) : false}
+        onToggleNotification={handleToggleNotification}
       />
 
       {/* Right Panel (Tonight Passes) */}

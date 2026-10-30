@@ -788,6 +788,37 @@ kbd {
   margin-top: 9px;
 }
 
+.sat-actions .sat-notify-btn {
+  grid-column: 1 / -1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 10px;
+}
+
+.sat-notify-btn.is-active {
+  border-color: rgba(246, 196, 83, 0.42);
+  background: rgba(246, 196, 83, 0.12);
+  color: var(--accent);
+}
+
+.sat-notify-btn svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.notify-indicator {
+  display: inline-flex;
+  align-items: center;
+  color: var(--accent);
+  font-size: 8px;
+  letter-spacing: 0;
+  margin-left: 4px;
+}
+
+
 .button {
   min-height: 36px;
   display: inline-flex;

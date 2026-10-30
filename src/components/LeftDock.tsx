@@ -27,6 +27,8 @@ interface LeftDockProps {
   onCloseCard: () => void;
   onToggleFollow: () => void;
   onShowOrbit: () => void;
+  isNotificationEnabled: boolean;
+  onToggleNotification: () => void;
 }
 
 export const LeftDock: React.FC<LeftDockProps> = ({
@@ -46,6 +48,8 @@ export const LeftDock: React.FC<LeftDockProps> = ({
   onCloseCard,
   onToggleFollow,
   onShowOrbit,
+  isNotificationEnabled,
+  onToggleNotification,
 }) => {
   const [collapsed, setCollapsed] = React.useState(false);
 
@@ -280,7 +284,14 @@ export const LeftDock: React.FC<LeftDockProps> = ({
           </div>
 
           <div className="next-pass-summary">
-            <span>MY NEXT PASS</span>
+            <span>
+              MY NEXT PASS
+              {isNotificationEnabled && (
+                <span className="notify-indicator" title="Pass alerts enabled for this satellite">
+                  {" "}· 🔔
+                </span>
+              )}
+            </span>
             <strong id="satNextPass">{nextPassText()}</strong>
           </div>
 
@@ -305,6 +316,27 @@ export const LeftDock: React.FC<LeftDockProps> = ({
                 <circle cx="12" cy="12" r="2.2" fill="currentColor" />
               </svg>
               <span>Show orbit</span>
+            </button>
+            <button
+              id="notifyPassBtn"
+              className={`button secondary sat-notify-btn ${isNotificationEnabled ? "is-active" : ""}`}
+              type="button"
+              aria-pressed={isNotificationEnabled}
+              title={isNotificationEnabled ? "Disable pass notifications" : "Enable browser notification when a pass is imminent"}
+              onClick={onToggleNotification}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                {isNotificationEnabled && <circle cx="18" cy="4" r="2.5" fill="var(--accent)" />}
+              </svg>
+              <span>{isNotificationEnabled ? "Pass alerts enabled (10m prior)" : "Notify on imminent pass"}</span>
             </button>
           </div>
         </section>

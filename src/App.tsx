@@ -161,6 +161,8 @@ export const App: React.FC = () => {
   const passScanTokenRef = useRef(0);
   const toastTimerRef = useRef<any>(0);
   const satrecMapRef = useRef<Map<number, any>>(new Map());
+  const satellitesRef = useRef<Satellite[]>([]);
+  const handleSelectSatelliteRef = useRef<(index: number | null, fly?: boolean) => void>(() => {});
 
   // Settings
   const [settings, setSettings] = useState<UserSettings>(() => {
@@ -270,6 +272,18 @@ export const App: React.FC = () => {
       setToast(null);
     }, duration);
   }, []);
+
+  useEffect(() => {
+    satellitesRef.current = satellites;
+  }, [satellites]);
+
+  // Sync mobile sheet state to body classes
+  useEffect(() => {
+    document.body.classList.toggle("sheet-open", activeSheet !== null);
+    document.body.classList.toggle("sheet-layers", activeSheet === "layers");
+    document.body.classList.toggle("sheet-tonight", activeSheet === "tonight");
+    document.body.classList.toggle("sheet-satellite", activeSheet === "satellite");
+  }, [activeSheet]);
 
   // Save preferences
   useEffect(() => {
@@ -520,7 +534,8 @@ export const App: React.FC = () => {
         globeRef.current?.setFollow(null, false);
         return;
       }
-      const sat = satellites[index];
+      const list = satellitesRef.current.length ? satellitesRef.current : satellites;
+      const sat = list[index];
       if (!sat) return;
       setSelectedIndex(index);
       setIsFollowing(false);
@@ -538,6 +553,12 @@ export const App: React.FC = () => {
       computeTelemetry(sat, simTime);
       buildSelectionGeometry(sat, simTime);
 
+      showToast(`Satélite seleccionado: ${sat.name} · NORAD ${sat.noradId}`);
+
+      if (window.innerWidth <= 760) {
+        setActiveSheet("satellite");
+      }
+
       if (observer) {
         setSelectedPassStatus("Escaneando…");
         try {
@@ -550,8 +571,9 @@ export const App: React.FC = () => {
         }
       }
     },
-    [satellites, display.groups, computeTelemetry, buildSelectionGeometry, simTime, observer, getSatrec]
+    [satellites, display.groups, computeTelemetry, buildSelectionGeometry, simTime, observer, getSatrec, showToast]
   );
+  handleSelectSatelliteRef.current = handleSelectSatellite;
 
   // Toggle follow
   const handleToggleFollow = useCallback(() => {
@@ -907,7 +929,8 @@ export const App: React.FC = () => {
             setHoverInfo({ satellite: null, position: null, altitude: null });
             viewportRef.current?.classList.remove("hovering-satellite");
           } else {
-            const sat = satellites[index] || null;
+            const list = satellitesRef.current;
+            const sat = list[index] || null;
             const pos = globe.screenPosition(index);
             const alt = globe.altitudeOf(index);
             setHoverInfo({ satellite: sat, position: pos, altitude: alt });
@@ -915,11 +938,7 @@ export const App: React.FC = () => {
           }
         },
         onSelect: (index: number | null) => {
-          handleSelectSatellite(index, true);
-          if (index !== null) {
-            const s = satellites[index];
-            if (s) showToast(`${s.name} seleccionado`);
-          }
+          handleSelectSatelliteRef.current(index, true);
         },
         onFollowChange: (val: boolean) => {
           setIsFollowing(val);
@@ -951,6 +970,7 @@ export const App: React.FC = () => {
       setCities(cityList);
       setMeta(payload.meta);
       const prep = prepareCatalog(payload.satellites);
+      satellitesRef.current = prep.satellites;
       setSatellites(prep.satellites);
       setCounts(prep.counts);
 

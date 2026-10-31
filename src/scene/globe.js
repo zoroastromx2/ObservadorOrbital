@@ -429,7 +429,8 @@ export class Globe {
           if (aSize <= 0.0) {
             gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
           }
-          gl_Position.xy += position.xy * 2.0 * (aSize * 3.0) / uResolution * gl_Position.w;
+          float pickRadius = max(aSize * 4.2, 18.0);
+          gl_Position.xy += position.xy * 2.0 * pickRadius / uResolution * gl_Position.w;
           vId = aId;
         }
       `,
@@ -1106,9 +1107,8 @@ export class Globe {
         if (this.pointer.buttonDown) {
           const ddx = event.clientX - prev.x;
           const ddy = event.clientY - prev.y;
-          const dist = Math.hypot(ddx, ddy);
-          this.pointer.totalDist += dist;
-          if (this.pointer.totalDist > 4) {
+          const distFromStart = Math.hypot(event.clientX - this.pointer.startX, event.clientY - this.pointer.startY);
+          if (distFromStart > 5) {
             this.pointer.moved = true;
             const zoomFactor = Math.max(0.35, Math.min(2.0, this.view.distance / 3.0));
             const sensX = 0.36 * zoomFactor;
@@ -1139,9 +1139,8 @@ export class Globe {
     if (this.pointer.buttonDown) {
       const ddx = event.clientX - this.pointer.lastX;
       const ddy = event.clientY - this.pointer.lastY;
-      const dist = Math.hypot(ddx, ddy);
-      this.pointer.totalDist += dist;
-      if (this.pointer.totalDist > 4) {
+      const distFromStart = Math.hypot(event.clientX - this.pointer.startX, event.clientY - this.pointer.startY);
+      if (distFromStart > 5) {
         this.pointer.moved = true;
         const zoomFactor = Math.max(0.35, Math.min(2.0, this.view.distance / 3.0));
         const sensX = 0.34 * zoomFactor;
@@ -1184,16 +1183,22 @@ export class Globe {
       this.inertia.velLat = Math.max(-maxVel, Math.min(maxVel, this.inertia.velLat));
     }
 
+    const clickDist = Math.hypot(
+      event.clientX - this.pointer.startX,
+      event.clientY - this.pointer.startY
+    );
+    const wasClick = clickDist < 8 && this.pointer.buttonDown;
+
     if (event.pointerType === "touch" && this.pointerState) {
       this.pointerState = this.pointerState.filter((p) => p.id !== event.pointerId);
       if (this.pointerState.length < 2) this.pinchDistance = 0;
-      if (!this.pointer.moved && this.pointer.buttonDown) {
+      if (wasClick) {
         this.pickAndSelect(event.clientX, event.clientY);
       }
       this.pointer.buttonDown = false;
       return;
     }
-    if (!this.pointer.moved && this.pointer.buttonDown) {
+    if (wasClick) {
       this.pickAndSelect(event.clientX, event.clientY);
     }
     this.pointer.buttonDown = false;
@@ -1239,42 +1244,111 @@ export class Globe {
   }
 
   pick(clientX, clientY) {
-    if (!this.pickTarget || !this.pickMesh) return null;
     const rect = this.renderer.domElement.getBoundingClientRect();
     if (
       clientX < rect.left || clientX > rect.right ||
       clientY < rect.top || clientY > rect.bottom
     ) return null;
-    const previousTarget = this.renderer.getRenderTarget();
-    const previousColor = new THREE.Color();
-    this.renderer.getClearColor(previousColor);
-    const previousAlpha = this.renderer.getClearAlpha();
-    this.renderer.setRenderTarget(this.pickTarget);
-    this.renderer.setClearColor(0x000000, 1);
-    this.renderer.clear();
-    this.renderer.render(this.pickScene, this.camera);
-    const x = Math.max(
-      0,
-      Math.min(
-        this.pickSize.width - 1,
-        Math.round(((clientX - rect.left) / rect.width) * this.pickSize.width)
-      )
-    );
-    const y = Math.max(
-      0,
-      Math.min(
-        this.pickSize.height - 1,
-        Math.round(((rect.bottom - clientY) / rect.height) * this.pickSize.height)
-      )
-    );
-    const pixel = new Uint8Array(4);
-    this.renderer.readRenderTargetPixels(this.pickTarget, x, y, 1, 1, pixel);
-    this.renderer.setRenderTarget(previousTarget);
-    this.renderer.setClearColor(previousColor, previousAlpha);
-    const id = pixel[0] * 256 + pixel[1];
-    if (!id) return null;
-    const index = id - 1;
-    return index >= 0 && index < this.satellites.length ? index : null;
+
+    // 1. GPU render target picking with a multi-pixel neighborhood search
+    let gpuPickedIndex = null;
+    if (this.pickTarget && this.pickMesh) {
+      try {
+        const previousTarget = this.renderer.getRenderTarget();
+        const previousColor = new THREE.Color();
+        this.renderer.getClearColor(previousColor);
+        const previousAlpha = this.renderer.getClearAlpha();
+        this.renderer.setRenderTarget(this.pickTarget);
+        this.renderer.setClearColor(0x000000, 1);
+        this.renderer.clear();
+        this.renderer.render(this.pickScene, this.camera);
+
+        const centerX = Math.max(
+          0,
+          Math.min(
+            this.pickSize.width - 1,
+            Math.round(((clientX - rect.left) / rect.width) * this.pickSize.width)
+          )
+        );
+        const centerY = Math.max(
+          0,
+          Math.min(
+            this.pickSize.height - 1,
+            Math.round(((rect.bottom - clientY) / rect.height) * this.pickSize.height)
+          )
+        );
+
+        const radius = 6;
+        const startX = Math.max(0, centerX - radius);
+        const startY = Math.max(0, centerY - radius);
+        const endX = Math.min(this.pickSize.width - 1, centerX + radius);
+        const endY = Math.min(this.pickSize.height - 1, centerY + radius);
+        const w = endX - startX + 1;
+        const h = endY - startY + 1;
+        const pixels = new Uint8Array(w * h * 4);
+        this.renderer.readRenderTargetPixels(this.pickTarget, startX, startY, w, h, pixels);
+        this.renderer.setRenderTarget(previousTarget);
+        this.renderer.setClearColor(previousColor, previousAlpha);
+
+        let closestId = 0;
+        let minDistanceSq = Infinity;
+        for (let py = 0; py < h; py++) {
+          for (let px = 0; px < w; px++) {
+            const offset = (py * w + px) * 4;
+            const id = pixels[offset] * 256 + pixels[offset + 1];
+            if (id > 0) {
+              const actualX = startX + px;
+              const actualY = startY + py;
+              const distSq = (actualX - centerX) ** 2 + (actualY - centerY) ** 2;
+              if (distSq < minDistanceSq) {
+                minDistanceSq = distSq;
+                closestId = id;
+              }
+            }
+          }
+        }
+        if (closestId > 0) {
+          const idx = closestId - 1;
+          if (idx >= 0 && idx < this.satellites.length) {
+            gpuPickedIndex = idx;
+          }
+        }
+      } catch (err) {
+        console.warn("GPU picking error:", err);
+      }
+    }
+
+    if (gpuPickedIndex !== null) {
+      return gpuPickedIndex;
+    }
+
+    // 2. Screen-space proximity fallback for high-DPI and touch devices
+    const touchTolerance = window.innerWidth <= 768 ? 26 : 18;
+    const toleranceSq = touchTolerance * touchTolerance;
+    let closestIndex = null;
+    let closestDistSq = toleranceSq;
+
+    if (this.satellites && this.positions) {
+      for (let i = 0; i < this.satellites.length; i++) {
+        if (!this.valid[i]) continue;
+        const sat = this.satellites[i];
+        if (this.display?.groups && !this.display.groups[sat.group]) continue;
+        if (this.display?.bands && !this.display.bands[sat.orbitClass]) continue;
+
+        const screenPos = this.screenPosition(i);
+        if (!screenPos || !screenPos.visible) continue;
+
+        const dx = screenPos.x - clientX;
+        const dy = screenPos.y - clientY;
+        const dSq = dx * dx + dy * dy;
+        if (dSq < closestDistSq) {
+          closestDistSq = dSq;
+          closestIndex = i;
+        }
+      }
+    }
+
+    return closestIndex;
   }
 
   async captureShare({ name, timeText, subtitle }) {

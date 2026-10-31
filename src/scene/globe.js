@@ -279,7 +279,20 @@ export class Globe {
       starlink: 1.5,
       other: 2.0,
     };
-    this.pointer = { x: 0, y: 0, inside: false, buttonDown: false, moved: false };
+    this.pointer = {
+      x: 0,
+      y: 0,
+      inside: false,
+      buttonDown: false,
+      moved: false,
+      startX: 0,
+      startY: 0,
+      lastX: 0,
+      lastY: 0,
+      lastTime: 0,
+      totalDist: 0,
+    };
+    this.inertia = { velLon: 0, velLat: 0 };
     this.lastPointer = null;
     this.pointerState = null;
     this.pinchDistance = 0;
@@ -931,6 +944,20 @@ export class Globe {
       const blend = 1 - Math.exp(-delta * 6);
       this.view.lat += (target.lat - this.view.lat) * blend;
       this.view.lon += deltaLon * blend;
+    } else if (!this.pointer.buttonDown && !this.intro) {
+      if (Math.abs(this.inertia.velLon) > 0.0001 || Math.abs(this.inertia.velLat) > 0.0001) {
+        const stepMs = delta * 1000;
+        this.view.lon += this.inertia.velLon * stepMs;
+        this.view.lat = Math.max(-85, Math.min(85, this.view.lat + this.inertia.velLat * stepMs));
+        const friction = Math.exp(-delta * 4.2);
+        this.inertia.velLon *= friction;
+        this.inertia.velLat *= friction;
+        if (Math.abs(this.inertia.velLon) < 0.0001) this.inertia.velLon = 0;
+        if (Math.abs(this.inertia.velLat) < 0.0001) this.inertia.velLat = 0;
+      }
+    }
+    if (this.view.lon > 180 || this.view.lon < -180) {
+      this.view.lon = ((((this.view.lon + 180) % 360) + 360) % 360) - 180;
     }
     const pos = dirFromLatLon(this.view.lat, this.view.lon, this.view.distance);
     this.camera.position.copy(pos);
@@ -1013,6 +1040,13 @@ export class Globe {
     if (event.pointerType === "mouse" && event.button !== 0) return;
     if (this.callbacks.onInteract) this.callbacks.onInteract();
     const canvas = this.renderer.domElement;
+
+    if (this.intro) this.intro = null;
+    if (this.flight) this.flight = null;
+    this.inertia.velLon = 0;
+    this.inertia.velLat = 0;
+    canvas.classList.add("dragging");
+
     if (event.pointerType === "touch") {
       if (!this.pointerState) this.pointerState = [];
       this.pointerState.push({ id: event.pointerId, x: event.clientX, y: event.clientY });
@@ -1026,20 +1060,28 @@ export class Globe {
       this.pointer.moved = false;
       this.pointer.startX = event.clientX;
       this.pointer.startY = event.clientY;
+      this.pointer.lastX = event.clientX;
+      this.pointer.lastY = event.clientY;
+      this.pointer.lastTime = performance.now();
+      this.pointer.totalDist = 0;
       return;
     }
+
     this.pointer.buttonDown = true;
     this.pointer.moved = false;
     this.pointer.startX = event.clientX;
     this.pointer.startY = event.clientY;
     this.pointer.lastX = event.clientX;
     this.pointer.lastY = event.clientY;
+    this.pointer.lastTime = performance.now();
+    this.pointer.totalDist = 0;
     canvas.setPointerCapture(event.pointerId);
   }
 
   onPointerMove(event) {
     if (this.callbacks.onPointerActivity) this.callbacks.onPointerActivity();
     this.pointer.inside = true;
+
     if (event.pointerType === "touch" && this.pointerState) {
       const index = this.pointerState.findIndex((p) => p.id === event.pointerId);
       if (index >= 0) {
@@ -1049,7 +1091,7 @@ export class Globe {
           const dx = this.pointerState[0].x - this.pointerState[1].x;
           const dy = this.pointerState[0].y - this.pointerState[1].y;
           const distance = Math.hypot(dx, dy);
-          if (this.pinchDistance) {
+          if (this.pinchDistance && distance > 0) {
             this.view.distance = Math.max(
               1.18,
               Math.min(8.5, this.view.distance * (this.pinchDistance / distance))
@@ -1064,13 +1106,26 @@ export class Globe {
         if (this.pointer.buttonDown) {
           const ddx = event.clientX - prev.x;
           const ddy = event.clientY - prev.y;
-          if (Math.abs(ddx) + Math.abs(ddy) > 1) {
+          const dist = Math.hypot(ddx, ddy);
+          this.pointer.totalDist += dist;
+          if (this.pointer.totalDist > 4) {
             this.pointer.moved = true;
-            this.view.lon -= ddx * 0.006;
-            this.view.lat = Math.max(-85, Math.min(85, this.view.lat + ddy * 0.005));
+            const zoomFactor = Math.max(0.35, Math.min(2.0, this.view.distance / 3.0));
+            const sensX = 0.36 * zoomFactor;
+            const sensLat = 0.30 * zoomFactor;
+            this.view.lon -= ddx * sensX;
+            this.view.lat = Math.max(-85, Math.min(85, this.view.lat + ddy * sensLat));
             this.followIndex = null;
             this.flight = null;
             if (this.callbacks.onFollowChange) this.callbacks.onFollowChange(false);
+
+            const now = performance.now();
+            const dt = Math.max(8, now - (this.pointer.lastTime || now));
+            const instantVelLon = (-ddx * sensX) / dt;
+            const instantVelLat = (ddy * sensLat) / dt;
+            this.inertia.velLon = this.inertia.velLon * 0.3 + instantVelLon * 0.7;
+            this.inertia.velLat = this.inertia.velLat * 0.3 + instantVelLat * 0.7;
+            this.pointer.lastTime = now;
           }
         }
       }
@@ -1084,13 +1139,26 @@ export class Globe {
     if (this.pointer.buttonDown) {
       const ddx = event.clientX - this.pointer.lastX;
       const ddy = event.clientY - this.pointer.lastY;
-      if (Math.abs(ddx) + Math.abs(ddy) > 1) {
+      const dist = Math.hypot(ddx, ddy);
+      this.pointer.totalDist += dist;
+      if (this.pointer.totalDist > 4) {
         this.pointer.moved = true;
-        this.view.lon -= ddx * 0.0052;
-        this.view.lat = Math.max(-85, Math.min(85, this.view.lat + ddy * 0.0045));
+        const zoomFactor = Math.max(0.35, Math.min(2.0, this.view.distance / 3.0));
+        const sensX = 0.34 * zoomFactor;
+        const sensLat = 0.28 * zoomFactor;
+        this.view.lon -= ddx * sensX;
+        this.view.lat = Math.max(-85, Math.min(85, this.view.lat + ddy * sensLat));
         this.followIndex = null;
         this.flight = null;
         if (this.callbacks.onFollowChange) this.callbacks.onFollowChange(false);
+
+        const now = performance.now();
+        const dt = Math.max(8, now - (this.pointer.lastTime || now));
+        const instantVelLon = (-ddx * sensX) / dt;
+        const instantVelLat = (ddy * sensLat) / dt;
+        this.inertia.velLon = this.inertia.velLon * 0.3 + instantVelLon * 0.7;
+        this.inertia.velLat = this.inertia.velLat * 0.3 + instantVelLat * 0.7;
+        this.pointer.lastTime = now;
       }
       this.pointer.lastX = event.clientX;
       this.pointer.lastY = event.clientY;
@@ -1101,7 +1169,21 @@ export class Globe {
 
   onPointerUp(event) {
     const canvas = this.renderer.domElement;
-    if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+    if (canvas.hasPointerCapture(event.pointerId)) {
+      canvas.releasePointerCapture(event.pointerId);
+    }
+    canvas.classList.remove("dragging");
+
+    const now = performance.now();
+    if (now - (this.pointer.lastTime || 0) > 80) {
+      this.inertia.velLon = 0;
+      this.inertia.velLat = 0;
+    } else {
+      const maxVel = 0.12;
+      this.inertia.velLon = Math.max(-maxVel, Math.min(maxVel, this.inertia.velLon));
+      this.inertia.velLat = Math.max(-maxVel, Math.min(maxVel, this.inertia.velLat));
+    }
+
     if (event.pointerType === "touch" && this.pointerState) {
       this.pointerState = this.pointerState.filter((p) => p.id !== event.pointerId);
       if (this.pointerState.length < 2) this.pinchDistance = 0;
@@ -1120,16 +1202,21 @@ export class Globe {
   onPointerLeave() {
     this.pointer.inside = false;
     this.hoverIndex = null;
+    const canvas = this.renderer.domElement;
+    canvas.classList.remove("dragging");
     if (this.callbacks.onHover) this.callbacks.onHover(null, null);
   }
 
   onWheel(event) {
     event.preventDefault();
     if (this.callbacks.onInteract) this.callbacks.onInteract();
+    if (this.intro) this.intro = null;
+    if (this.flight) this.flight = null;
+    this.inertia.velLon = 0;
+    this.inertia.velLat = 0;
     const scale = Math.exp(event.deltaY * 0.0011);
     this.view.distance = Math.max(1.18, Math.min(8.5, this.view.distance * scale));
     this.followIndex = null;
-    this.flight = null;
     if (this.callbacks.onFollowChange) this.callbacks.onFollowChange(false);
   }
 

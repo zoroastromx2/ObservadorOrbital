@@ -132,13 +132,17 @@ input:focus-visible,
   height: 100%;
   touch-action: none;
   cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
-#viewport canvas:active {
-  cursor: grabbing;
+#viewport canvas:active,
+#viewport canvas.dragging,
+#viewport.dragging canvas {
+  cursor: grabbing !important;
 }
 
-#viewport.hovering-satellite canvas {
+#viewport.hovering-satellite canvas:not(.dragging) {
   cursor: pointer;
 }
 

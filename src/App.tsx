@@ -54,6 +54,8 @@ import { BootScreen } from "./components/BootScreen";
 const PREF_KEY = "orbital-watch-prefs-v1";
 const LOCATION_KEY = "orbital-watch-location-v1";
 const NOTIFY_KEY = "orbital-watch-notifications-v1";
+const RECENT_LOCATIONS_KEY = "orbital-watch-recent-locations-v1";
+const ALT_RECENT_LOCATIONS_KEY = "orbital_recent_locations_v1";
 const DAY = 86400000;
 
 function readJson<T>(key: string, fallback: T): T {
@@ -71,6 +73,25 @@ function writeJson(key: string, value: any) {
   } catch {
     /* storage unavailable */
   }
+}
+
+function getStoredRecentLocations(): LocationInfo[] {
+  let list = readJson<LocationInfo[]>(RECENT_LOCATIONS_KEY, []);
+  if (!Array.isArray(list) || list.length === 0) {
+    list = readJson<LocationInfo[]>(ALT_RECENT_LOCATIONS_KEY, []);
+  }
+  if (Array.isArray(list)) {
+    return list
+      .filter((loc) => loc && typeof loc.name === "string" && Number.isFinite(loc.lat) && Number.isFinite(loc.lon))
+      .slice(0, 5);
+  }
+  return [];
+}
+
+function saveRecentLocations(list: LocationInfo[]) {
+  const capped = list.slice(0, 5);
+  writeJson(RECENT_LOCATIONS_KEY, capped);
+  writeJson(ALT_RECENT_LOCATIONS_KEY, capped);
 }
 
 class PositionRuntime {
@@ -203,6 +224,17 @@ export const App: React.FC = () => {
       return loc;
     }
     return null;
+  });
+  const [recentLocations, setRecentLocations] = useState<LocationInfo[]>(() => {
+    const list = getStoredRecentLocations();
+    if (list.length > 0) return list;
+    const current = readJson<any>(LOCATION_KEY, null) || readJson<any>("orbital_location_v1", null);
+    if (current && Number.isFinite(current.lat) && Number.isFinite(current.lon) && typeof current.name === "string") {
+      const initList = [current];
+      saveRecentLocations(initList);
+      return initList;
+    }
+    return [];
   });
 
   // Selection & Telemetry
@@ -500,6 +532,23 @@ export const App: React.FC = () => {
       const { fly = true, firstRun = false } = options;
       setLocationState(loc);
       writeJson(LOCATION_KEY, loc);
+      writeJson("orbital_location_v1", loc);
+
+      // Save to recent locations (capped at 5, newest first, deduplicated)
+      setRecentLocations((prev) => {
+        const filtered = prev.filter(
+          (item) =>
+            !(
+              (item.name.toLowerCase() === loc.name.toLowerCase() &&
+                (item.country || "").toLowerCase() === (loc.country || "").toLowerCase()) ||
+              (Math.abs(item.lat - loc.lat) < 0.05 && Math.abs(item.lon - loc.lon) < 0.05)
+            )
+        );
+        const updated = [loc, ...filtered].slice(0, 5);
+        saveRecentLocations(updated);
+        return updated;
+      });
+
       globeRef.current?.setLocation(loc);
       if (fly && globeRef.current) {
         globeRef.current.flyToLocation(loc.lat, loc.lon, 2.95, 1300);
@@ -522,6 +571,12 @@ export const App: React.FC = () => {
     },
     [satellites, startPassScan, showToast]
   );
+
+  const handleClearRecentLocations = useCallback(() => {
+    setRecentLocations([]);
+    saveRecentLocations([]);
+    showToast("Historial de ubicaciones recientes borrado.");
+  }, [showToast]);
 
   // Satellite selection
   const handleSelectSatellite = useCallback(
@@ -1014,6 +1069,10 @@ export const App: React.FC = () => {
         get location() {
           return location;
         },
+        get recentLocations() {
+          return recentLocations;
+        },
+        setLocation: (loc: LocationInfo) => setLocation(loc, { fly: true }),
       };
     }
 
@@ -1353,10 +1412,12 @@ export const App: React.FC = () => {
           mode={welcomeMode}
           cities={cities}
           currentLocation={location}
+          recentLocations={recentLocations}
           onSelectLocation={(loc, isFirst) => {
             setWelcomeOpen(false);
             setLocation(loc, { fly: true, firstRun: isFirst });
           }}
+          onClearRecentLocations={handleClearRecentLocations}
           onClose={() => setWelcomeOpen(false)}
         />
       )}
@@ -1366,6 +1427,7 @@ export const App: React.FC = () => {
         <CommandPaletteModal
           satellites={satellites}
           cities={cities}
+          recentLocations={recentLocations}
           onClose={() => setPaletteOpen(false)}
           onSelectSatellite={(sat) => handleSelectSatellite(sat.index, true)}
           onSelectCity={(city) =>

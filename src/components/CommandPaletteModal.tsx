@@ -1,5 +1,5 @@
 import React from "react";
-import { Satellite, CityInfo } from "../types/orbital";
+import { Satellite, CityInfo, LocationInfo } from "../types/orbital";
 import { GROUP_BY_ID } from "../lib/catalog";
 
 interface PaletteItem {
@@ -17,6 +17,7 @@ interface PaletteItem {
 interface CommandPaletteModalProps {
   satellites: Satellite[];
   cities: CityInfo[];
+  recentLocations?: LocationInfo[];
   onClose: () => void;
   onSelectSatellite: (sat: Satellite) => void;
   onSelectCity: (city: CityInfo) => void;
@@ -40,6 +41,7 @@ function normalizeText(value: string) {
 export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
   satellites,
   cities,
+  recentLocations = [],
   onClose,
   onSelectSatellite,
   onSelectCity,
@@ -253,6 +255,35 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
       }
     }
 
+    // Recent Locations
+    const rItems: PaletteItem[] = [];
+    if (recentLocations && recentLocations.length > 0) {
+      for (const loc of recentLocations) {
+        const name = normalizeText(loc.name);
+        const admin = normalizeText(loc.admin || "");
+        const country = normalizeText(loc.country || "");
+        if (!q || name.includes(q) || admin.includes(q) || country.includes(q)) {
+          rItems.push({
+            id: `recent-loc-${loc.name}-${loc.lat}-${loc.lon}`,
+            type: "city",
+            title: loc.name,
+            subtitle: `${[loc.admin, loc.country].filter(Boolean).join(" · ") || `${loc.lat.toFixed(1)}°, ${loc.lon.toFixed(1)}°`} (Historial reciente)`,
+            iconText: "🕒",
+            run: () => {
+              onClose();
+              onSelectCity({
+                name: loc.name,
+                admin: loc.admin,
+                country: loc.country || "",
+                lat: loc.lat,
+                lon: loc.lon,
+              });
+            },
+          });
+        }
+      }
+    }
+
     // Cities
     const ciItems: PaletteItem[] = [];
     if (q) {
@@ -288,11 +319,12 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
 
     return {
       commandItems: cItems,
+      recentItems: rItems,
       satItems: sItems,
       cityItems: ciItems,
-      allItems: [...cItems, ...sItems, ...ciItems],
+      allItems: [...cItems, ...rItems, ...sItems, ...ciItems],
     };
-  }, [query, COMMANDS, satellites, cities, onClose, onSelectSatellite, onSelectCity]);
+  }, [query, COMMANDS, satellites, cities, recentLocations, onClose, onSelectSatellite, onSelectCity]);
 
   // Adjust activeIndex if out of bounds
   React.useEffect(() => {
@@ -385,6 +417,7 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
 
         <div id="paletteResults" className="palette-results">
           {renderSection("COMANDOS", commandItems)}
+          {renderSection("UBICACIONES RECIENTES", recentItems)}
           {renderSection("SATÉLITES", satItems)}
           {renderSection("CIUDADES", cityItems)}
 

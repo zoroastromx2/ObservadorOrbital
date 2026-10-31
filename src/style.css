@@ -3910,3 +3910,40 @@ body.reduced-motion *::after {
   }
 }
 
+.elevation-peak-tag.dynamic-active {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(56, 189, 248, 0.14);
+  border-color: rgba(56, 189, 248, 0.5);
+  color: #f8fafc;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
+}
+
+.elevation-tag-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #38bdf8;
+  display: inline-block;
+  box-shadow: 0 0 6px #38bdf8;
+}
+
+.elevation-tag-dot.pulse {
+  animation: pulse-ring 1.5s infinite ease-out;
+}
+
+.tag-sep {
+  color: rgba(148, 163, 184, 0.45);
+}
+
+.elevation-dynamic-annotation-group {
+  animation: fadeIn 120ms ease-out forwards;
+}
+
+.sky-view-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+}
+

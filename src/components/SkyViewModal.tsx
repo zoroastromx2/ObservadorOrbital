@@ -5,6 +5,7 @@ import {
   formatTime,
   formatDuration,
   azimuthLabel,
+  compassDirection,
   brightnessLabel,
   dayTag,
 } from "../lib/format";
@@ -63,6 +64,11 @@ export const SkyViewModal: React.FC<SkyViewModalProps> = ({
   const [pausedFraction, setPausedFraction] = React.useState(settings.reducedMotion ? 0.5 : 0);
   const [viewMode, setViewMode] = React.useState<"both" | "polar" | "elevation">("both");
   const [currentPoint, setCurrentPoint] = React.useState<{
+    timeMs: number;
+    azimuth: number;
+    elevation: number;
+  } | null>(null);
+  const [hoveredPoint, setHoveredPoint] = React.useState<{
     timeMs: number;
     azimuth: number;
     elevation: number;
@@ -147,7 +153,8 @@ export const SkyViewModal: React.FC<SkyViewModalProps> = ({
     ].filter((item) => !!item.pt);
   }, [path]);
 
-  const screenSat = currentPoint ? projectSky(currentPoint.azimuth, currentPoint.elevation) : { x: 360, y: 360 };
+  const displayPoint = hoveredPoint || currentPoint;
+  const screenSat = displayPoint ? projectSky(displayPoint.azimuth, displayPoint.elevation) : { x: 360, y: 360 };
 
   const CARDINALS = [
     { label: "N", angle: 0, className: "north" },
@@ -161,7 +168,7 @@ export const SkyViewModal: React.FC<SkyViewModalProps> = ({
   ];
 
   return (
-    <div id="skyView" className="sky-view" role="dialog" aria-modal="true" aria-labelledby="skyTitle">
+    <div id="skyView" className="sky-view sky-view-modal" role="dialog" aria-modal="true" aria-labelledby="skyTitle">
       <div className="sky-shell">
         <header className="sky-header">
           <button id="closeSkyView" className="button secondary" type="button" aria-label="Volver al globo" onClick={onClose}>
@@ -221,9 +228,16 @@ export const SkyViewModal: React.FC<SkyViewModalProps> = ({
                 </button>
               </div>
 
-              <div className="mono" style={{ fontSize: "9px", color: "var(--faint)" }}>
-                {currentPoint
-                  ? `AZ ${Math.round(currentPoint.azimuth)}° · EL ${Math.round(currentPoint.elevation)}°`
+              <div
+                className="mono"
+                style={{
+                  fontSize: "9px",
+                  color: hoveredPoint ? "var(--accent)" : "var(--faint)",
+                  transition: "color 150ms ease",
+                }}
+              >
+                {displayPoint
+                  ? `AZ ${displayPoint.azimuth.toFixed(1)}° (${compassDirection(displayPoint.azimuth)}) · EL ${displayPoint.elevation.toFixed(1)}°`
                   : "AZ — · EL —"}
               </div>
             </div>
@@ -342,8 +356,8 @@ export const SkyViewModal: React.FC<SkyViewModalProps> = ({
                   <span className="legend-line"></span> Trayectoria
                 </span>
                 <span className="mono" id="skyAzimuthReadout">
-                  {currentPoint
-                    ? `AZ ${Math.round(currentPoint.azimuth)}° · EL ${Math.round(currentPoint.elevation)}°`
+                  {displayPoint
+                    ? `AZ ${displayPoint.azimuth.toFixed(1)}° (${compassDirection(displayPoint.azimuth)}) · EL ${displayPoint.elevation.toFixed(1)}°`
                     : "AZ — · EL —"}
                 </span>
               </div>
@@ -356,6 +370,7 @@ export const SkyViewModal: React.FC<SkyViewModalProps> = ({
                 currentPoint={currentPoint}
                 use24h={use24h}
                 onSeek={handleSeek}
+                onHoverPoint={setHoveredPoint}
                 height={viewMode === "elevation" ? 330 : 142}
                 compact={viewMode === "both"}
               />
@@ -365,10 +380,10 @@ export const SkyViewModal: React.FC<SkyViewModalProps> = ({
           <aside className="sky-side">
             <div className="sky-preview-state">
               <span className="eyebrow" id="skyStateLabel">
-                VISTA PREVIA DEL PASO
+                {hoveredPoint ? "ANOTACIÓN DE TRAYECTORIA" : "VISTA PREVIA DEL PASO"}
               </span>
               <strong id="skyClock" className="mono">
-                {currentPoint ? formatClock(new Date(currentPoint.timeMs), use24h) : "--:--:--"}
+                {displayPoint ? formatClock(new Date(displayPoint.timeMs), use24h, true) : "--:--:--"}
               </strong>
             </div>
 
